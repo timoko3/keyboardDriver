@@ -1,24 +1,40 @@
 .model tiny 
 .code
-.486
+.386
 org 100h
+
+VIDEO_MEM_START_ADDR      equ 0b800h
+LENGTH_VIDEO_MEM_LINE     equ 80d  
+SCAN_CODE_COLOR           equ 4eh
+
+EOI                       equ 20h                   
+
+SHOW_REG_BUTTON_SCAN_CODE equ 29h
+
+DIFFERENCE_NUM_ASCII_L9   equ 48d
+DIFFERENCE_NUM_ASCII_G9   equ 55d
+
 
 Start: jmp nonResident
 
-VIDEO_MEM_START_ADDR  equ 0b800h
-LENGTH_VIDEO_MEM_LINE equ 80d  
-SCAN_CODE_COLOR       equ 4eh
-
-EOI                   equ 20h                   
-
-;--------------------------------------------------------------------------
+; --------------------------------------------------------------------------
 ; new int 09 handler part
-;--------------------------------------------------------------------------
+; --------------------------------------------------------------------------
+
+
+;-----------------------------------------------------------------------
+; new Function performed on int 09h draw regs values on '`' button press
+; Entry: no
+; Exit:  no
+; Exp:   no
+; Destr: no
+;-----------------------------------------------------------------------
 
 keyboardInt PROC
+    push ax bx es
     call keyboardIntPreamble
 
-    call handleInt
+    call handleScanCode
 
     call resetControllers
 
@@ -28,8 +44,16 @@ OLD_INT09_HANDLER: dd 0
 
 keyboardInt ENDP
 
+;-----------------------------------------------------------------------
+; preamble of int 09h function
+; Entry: no
+; Exit:  no
+; Exp:   no
+; Destr: es, bx, ah
+;-----------------------------------------------------------------------
+
 keyboardIntPreamble PROC
-    push ax bx es
+    
     push VIDEO_MEM_START_ADDR
     pop es
     mov bx, (LENGTH_VIDEO_MEM_LINE * 5d + LENGTH_VIDEO_MEM_LINE / 2) * 2   ; set start of video mem to write to the 5th line center
@@ -39,19 +63,106 @@ keyboardIntPreamble PROC
     ret
 keyboardIntPreamble ENDP
 
-handleInt PROC
-    in al, 60h
-
-    call handleScanCode
-
-    ret
-handleInt ENDP
+;-----------------------------------------------------------------------
+; read info from keyboard port 60h and 
+; if pressed needed button calls handler
+; Entry: no
+; Exit:  no
+; Exp:   no
+; Destr: al
+;-----------------------------------------------------------------------
 
 handleScanCode PROC
-    mov es:[bx], ax
+    in al, 60h
+
+    cmp al, SHOW_REG_BUTTON_SCAN_CODE
+    jne ??notNeededSC
+        mov es:[bx], ax
+
+        push di
+        call drawReg
+        add sp, 4h
+    ??notNeededSC:
 
     ret
 handleScanCode ENDP
+
+; CDECL
+;-----------------------------------------------------------------------
+; new Function performed on int 09h draw regs values on '`' button press
+; Entry: [bp - 4] = reg value to draw 
+; Exit:  no
+; Exp:   no
+; Destr: no
+;-----------------------------------------------------------------------
+
+drawReg PROC
+    push bp
+    mov bp, sp
+
+    push ax bx cx dx si di
+
+    ; init cycle
+
+    mov ch, 1d
+    mov cl, 4d  
+
+    xor dx,dx 
+    mov dx, 0fh   ; mask for reg nibble 
+
+    
+    ??startDrawingCycle:
+    cmp ch, cl
+    jge ??endDrawingCycle
+        mov ax, ss:[bp + 08h]
+        and ax, dx
+        call convertNibbleToASCII
+
+        inc ch
+    jmp ??startDrawingCycle
+    ??endDrawingCycle:
+
+    pop di si dx cx bx ax
+
+    mov sp, bp
+    pop bp
+    ret 
+drawReg ENDP
+
+;-----------------------------------------------------------------------
+; converts number in nibble to ASCII
+; Entry: ax = nibble
+;         
+; Exit:  ax = ASCII code
+; Exp:   no
+; Destr: ax
+;-----------------------------------------------------------------------
+
+convertNibbleToASCII PROC
+    ; case <= 9
+
+    cmp ax, 9d
+    jg ??G9
+        add ax, DIFFERENCE_NUM_ASCII_L9
+        jmp ??end
+
+    ??G9:
+
+    ; case > 9
+    
+    add ax, DIFFERENCE_NUM_ASCII_G9
+
+    ??end:
+    ret 
+convertNibbleToASCII ENDP
+
+;-----------------------------------------------------------------------
+; reset controllers to original state 
+; Entry: no
+; Exit:  no
+; Exp:   no
+; Destr: al
+;-----------------------------------------------------------------------
 
 resetControllers PROC
     ; reset keyboard controller MSB to guarantee that keyboard controller will continue to gen scan-codes
@@ -70,6 +181,8 @@ resetControllers ENDP
 
 
 
+
+
 ;-----------------------------------------------------------------
 ; Part to put residental programm in memory
 ;-----------------------------------------------------------------
@@ -78,6 +191,8 @@ nonResident:
     call addOldIntHandlerJmp
 
     call replaceInt09Handler
+    
+    int 09h
 
     call keepProgAsResident
 

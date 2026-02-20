@@ -13,7 +13,7 @@ keyboardInt PROC
     push VIDEO_MEM_START_ADDR
     pop es
     mov bx, (LENGTH_VIDEO_MEM_LINE * 5d + LENGTH_VIDEO_MEM_LINE / 2) * 2   ; set start of video mem to write to the 5th line center
-    mov ah, 3h
+    mov ah, 4eh
 
     in al, 60h
     mov es:[bx], ax
@@ -34,13 +34,6 @@ OLD_INT09_HANDLER: dd 0
 keyboardInt ENDP
 
 nonResident:
-    call addOldIntHandlerJmp
-
-    call replaceInt09Handler
-
-    call keepProgAsResident
-
-addOldIntHandlerJmp PROC
     push 0
     pop ds
     mov si, 4 * 09h
@@ -49,10 +42,6 @@ addOldIntHandlerJmp PROC
     mov di, offset OLD_INT09_HANDLER
     movsd
 
-    ret
-addOldIntHandlerJmp ENDP 
-
-replaceInt09Handler PROC
     push 0
     pop es
     mov bx, 4 * 09h
@@ -63,17 +52,10 @@ replaceInt09Handler PROC
     mov word ptr es:[bx + 2], ax
     sti
 
-    ret
-replaceInt09Handler ENDP
-
-keepProgAsResident PROC
     mov ax, 3100h
     mov dx, offset nonResident
     shr dx, 4
     inc dx
     int 21h
-
-    ret
-keepProgAsResident ENDP 
 
 end Start
