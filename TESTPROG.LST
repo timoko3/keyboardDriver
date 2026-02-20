@@ -1,0 +1,107 @@
+Turbo Assembler	 Version 4.1	    02/20/26 16:27:18	    Page 1
+testprog.asm
+
+
+
+      1	    0000			 .model	tiny
+      2	    0000			 .code
+      3					 .486
+      4					 org 100h
+      5
+      6	    0100  EB 28	90		 Start:	jmp nonResident
+      7
+      8	    0103			 keyboardInt PROC
+      9	    0103  50 53	06		     push ax bx	es
+     10	    0106  68 B800		     push 0b800h
+     11	    0109  07			     pop es
+     12	    010A  BB 0370		     mov bx, (80d * 5d + 40d) *	2
+     13	    010D  B4 4E			     mov ah, 4eh
+     14
+     15	    010F  E4 60			     in	al, 60h
+     16	    0111  26: 89 07		     mov es:[bx], ax
+     17
+     18	    0114  E4 61			     in	al, 61h
+     19	    0116  0C 80			     or	al, 80h
+     20	    0118  E6 61			     out 61h, al
+     21	    011A  24 7F			     and al, not 80h
+     22	    011C  E6 61			     out 61h, al
+     23
+     24	    011E  B0 20			     mov al, 20h
+     25	    0120  E6 20			     out 20h, al
+     26
+     27	    0122  07 5B	58		     pop es bx ax
+     28	    0125  EA			     db	0eah
+     29	    0126  00000000		 OLD_INT09_HANDLER: dd 0
+     30
+     31	    012A			 keyboardInt ENDP
+     32
+     33	    012A			 nonResident:
+     34	    012A  6A 00			     push 0
+     35	    012C  1F			     pop ds
+     36	    012D  BE 0024		     mov si, 4 * 09h
+     37	    0130  8C C8			     mov ax, cs
+     38	    0132  8E C0			     mov es, ax
+     39	    0134  BF 0126r		     mov di, offset OLD_INT09_HANDLER
+     40	    0137  66| A5		     movsd
+     41
+     42	    0139  6A 00			     push 0
+     43	    013B  07			     pop es
+     44	    013C  BB 0024		     mov bx, 4 * 09h
+     45	    013F  FA			     cli
+     46	    0140  26: C7 07 0103r	     mov word ptr es:[bx], offset keyboardInt
+     47
+     48	    0145  8C C8			     mov ax, cs
+     49	    0147  26: 89 47 02		     mov word ptr es:[bx + 2], ax
+     50	    014B  FB			     sti
+     51
+     52					     ; pushf
+     53					     ; push cs
+     54					     ; call keyboardInt
+     55
+     56	    014C  B8 3100		     mov ax, 3100h
+     57	    014F  BA 012Ar		     mov dx, offset nonResident
+Turbo Assembler	 Version 4.1	    02/20/26 16:27:18	    Page 2
+testprog.asm
+
+
+
+     58	    0152  C1 EA	04		     shr dx, 4
+     59	    0155  42			     inc dx
+     60	    0156  CD 21			     int 21h
+     61
+     62					 end Start
+Turbo Assembler	 Version 4.1	    02/20/26 16:27:18	    Page 3
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "02/20/26"
+??FILENAME			  Text	 "testprog"
+??TIME				  Text	 "16:27:18"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 DGROUP
+@CODESIZE			  Text	 0
+@CPU				  Text	 1F1FH
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 TESTPROG
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 1
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 4
+KEYBOARDINT			  Near	 DGROUP:0103
+NONRESIDENT			  Near	 DGROUP:012A
+OLD_INT09_HANDLER		  Near	 DGROUP:0126
+START				  Near	 DGROUP:0100
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+  _TEXT				  16  0158 Word	  Public  CODE
+
