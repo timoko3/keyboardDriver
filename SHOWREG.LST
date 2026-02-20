@@ -1,0 +1,131 @@
+Turbo Assembler	 Version 4.1	    02/20/26 17:02:10	    Page 1
+showreg.asm
+
+
+
+      1	    0000			 .model	tiny
+      2	    0000			 .code
+      3					 .486
+      4					 org 100h
+      5
+      6	    0100  EB 28	90		 Start:	jmp nonResident
+      7
+      8		  =B800			 VIDEO_MEM_START_ADDR  equ 0b800h
+      9		  =0050			 LENGTH_VIDEO_MEM_LINE equ 80d
+     10
+     11	    0103			 keyboardInt PROC
+     12	    0103  50 53	06		     push ax bx	es
+     13	    0106  68 B800		     push VIDEO_MEM_START_ADDR
+     14	    0109  07			     pop es
+     15	    010A  BB 0370		     mov bx, (LENGTH_VIDEO_MEM_LINE * 5d + LENGTH_VIDEO_MEM_LINE / 2) *	2   ; set start	of  +
+     16					 video mem to write to the 5th line center
+     17
+     18	    010D  B4 03			     mov ah, 3h	 ;set color for	scan-code to show
+     19
+     20	    010F  E4 60			     in	al, 60h
+     21	    0111  26: 89 07		     mov es:[bx], ax
+     22
+     23	    0114  E4 61			     in	al, 61h
+     24	    0116  0C 80			     or	al, 80h
+     25	    0118  E6 61			     out 61h, al
+     26	    011A  24 7F			     and al, not 80h
+     27	    011C  E6 61			     out 61h, al
+     28
+     29	    011E  B0 20			     mov al, 20h
+     30	    0120  E6 20			     out 20h, al
+     31
+     32	    0122  07 5B	58		     pop es bx ax
+     33	    0125  EA			     db	0eah
+     34	    0126  00000000		 OLD_INT09_HANDLER: dd 0
+     35
+     36	    012A			 keyboardInt ENDP
+     37
+     38	    012A			 nonResident:
+     39	    012A  E8 0006		     call addOldIntHandlerJmp
+     40
+     41	    012D  E8 0013		     call replaceInt09Handler
+     42
+     43	    0130  E8 0024		     call keepProgAsResident
+     44
+     45	    0133			 addOldIntHandlerJmp PROC
+     46	    0133  6A 00			     push 0
+     47	    0135  1F			     pop ds
+     48	    0136  BE 0024		     mov si, 4 * 09h
+     49	    0139  8C C8			     mov ax, cs
+     50	    013B  8E C0			     mov es, ax
+     51	    013D  BF 0126r		     mov di, offset OLD_INT09_HANDLER
+     52	    0140  66| A5		     movsd
+     53
+     54	    0142  C3			     ret
+     55	    0143			 addOldIntHandlerJmp ENDP
+     56
+     57	    0143			 replaceInt09Handler PROC
+Turbo Assembler	 Version 4.1	    02/20/26 17:02:10	    Page 2
+showreg.asm
+
+
+
+     58	    0143  6A 00			     push 0
+     59	    0145  07			     pop es
+     60	    0146  BB 0024		     mov bx, 4 * 09h
+     61	    0149  FA			     cli
+     62	    014A  26: C7 07 0103r	     mov word ptr es:[bx], offset keyboardInt
+     63
+     64	    014F  8C C8			     mov ax, cs
+     65	    0151  26: 89 47 02		     mov word ptr es:[bx + 2], ax
+     66	    0155  FB			     sti
+     67
+     68	    0156  C3			     ret
+     69	    0157			 replaceInt09Handler ENDP
+     70
+     71	    0157			 keepProgAsResident PROC
+     72	    0157  B8 3100		     mov ax, 3100h
+     73	    015A  BA 012Ar		     mov dx, offset nonResident
+     74	    015D  C1 EA	04		     shr dx, 4
+     75	    0160  42			     inc dx
+     76	    0161  CD 21			     int 21h
+     77
+     78	    0163  C3			     ret
+     79	    0164			 keepProgAsResident ENDP
+     80
+     81					 end Start
+Turbo Assembler	 Version 4.1	    02/20/26 17:02:10	    Page 3
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "02/20/26"
+??FILENAME			  Text	 "showreg "
+??TIME				  Text	 "17:02:09"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 DGROUP
+@CODESIZE			  Text	 0
+@CPU				  Text	 1F1FH
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 SHOWREG
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 1
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 4
+ADDOLDINTHANDLERJMP		  Near	 DGROUP:0133
+KEEPPROGASRESIDENT		  Near	 DGROUP:0157
+KEYBOARDINT			  Near	 DGROUP:0103
+LENGTH_VIDEO_MEM_LINE		  Number 0050
+NONRESIDENT			  Near	 DGROUP:012A
+OLD_INT09_HANDLER		  Near	 DGROUP:0126
+REPLACEINT09HANDLER		  Near	 DGROUP:0143
+START				  Near	 DGROUP:0100
+VIDEO_MEM_START_ADDR		  Number B800
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+  _TEXT				  16  0164 Word	  Public  CODE
+
