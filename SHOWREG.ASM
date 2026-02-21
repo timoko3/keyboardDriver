@@ -17,6 +17,13 @@ DIFFERENCE_NUM_ASCII_G9   equ 55d
 AMOUNT_NIBBLES_REGISTER   equ 4d
 AMOUNT_REGS_DUMP          equ 13d
 
+FRAME_INIT_LEN_ADDR       equ 80h
+_FRAME_MODE_ADDR          equ 82h
+_FRAME_SYMBOLS_START_ADDR equ 84h
+_FRAME_TEXT_ADDR          equ 84h + 0ah
+
+
+                    
 Start: jmp nonResident
 
 ; --------------------------------------------------------------------------
@@ -31,6 +38,8 @@ Start: jmp nonResident
 ; Exp:   no
 ; Destr: no
 ;-----------------------------------------------------------------------
+
+frameSymbolsStr db 0C9h,0CDh,0BBh,0BAh,' ',0BAh,0C8h,0CDh,0BCh,'$'
 
 keyboardInt PROC
     push sp bp ss es ds di si dx cx bx ax
@@ -96,9 +105,11 @@ handleScanCode PROC
 handleScanCode ENDP
 
 drawAllRegs PROC
-    mov bx, (LENGTH_VIDEO_MEM_LINE * 5d + LENGTH_VIDEO_MEM_LINE / 2) * 2
+    mov bx, _FRAME_TEXT_ADDR 
 
     mov cx, 1d 
+
+    call putInMemFrameParams 
 
     ??StartCycle:
     cmp cx, AMOUNT_REGS_DUMP + 1d 
@@ -115,7 +126,9 @@ drawAllRegs PROC
 
         call drawReg
 
-        call moveToNextLineVideoMem
+        mov byte ptr ss:[bx], '#'
+        add bx, 1
+        ; call moveToNextLineVideoMem
 
         inc cx
         jmp ??StartCycle
@@ -142,7 +155,7 @@ drawReg PROC
     push bp
     mov bp, sp
 
-    push ax bx cx dx si di
+    push ax cx dx si di
 
     ; init cycle
 
@@ -169,16 +182,15 @@ drawReg PROC
 
         call convertNibbleToASCII
 
-        mov byte ptr es:[bx], al
-        mov byte ptr es:[bx + 1], SCAN_CODE_COLOR
+        mov byte ptr ss:[bx], al
 
-        add bx, 2
+        add bx, 1
         shr dx, 4
         inc cx
     jmp ??startDrawingCycle
     ??endDrawingCycle:
 
-    pop di si dx cx bx ax
+    pop di si dx cx ax
 
     mov sp, bp
     pop bp
@@ -211,6 +223,34 @@ convertNibbleToASCII PROC
     ??end:
     ret 
 convertNibbleToASCII ENDP
+
+putInMemFrameParams PROC
+    push ax cx si di
+    
+    mov si, FRAME_INIT_LEN_ADDR
+    mov byte ptr ss:[si], 1d
+
+    mov si, _FRAME_MODE_ADDR
+    mov byte ptr ss:[si], 3d
+
+    mov si, _FRAME_SYMBOLS_START_ADDR
+
+    mov si, offset frameSymbolsStr
+    mov di, _FRAME_SYMBOLS_START_ADDR
+    mov cx, 9d
+    push ds es
+
+    mov ax, cs
+    mov ds, ax 
+    mov es, ax
+
+    rep movsb
+
+    pop es ds
+
+    pop di si cx ax 
+    ret 
+putInMemFrameParams ENDP
 
 ;-----------------------------------------------------------------------
 ; reset controllers to original state 
@@ -247,6 +287,8 @@ nonResident:
     call addOldIntHandlerJmp
 
     call replaceInt09Handler 
+
+    int 09h
 
     call keepProgAsResident
 
