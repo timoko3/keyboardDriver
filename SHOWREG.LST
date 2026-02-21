@@ -1,4 +1,4 @@
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 1
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 1
 showreg.asm
 
 
@@ -29,7 +29,7 @@ showreg.asm
      24
      25
      26
-     27	    0100  E9 0322		 Start:	jmp nonResident
+     27	    0100  E9 0329		 Start:	jmp nonResident
      28
      29					 ; --------------------------------------------------------------------------
      30					 ; new int 09 handler part
@@ -59,8 +59,8 @@ showreg.asm
      54
      55	    011E  E8 0020		     call handleScanCode
      56
-     57	    0121  E8 00E0		     call resetControllers
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 2
+     57	    0121  E8 00E9		     call resetControllers
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 2
 showreg.asm
 
 
@@ -109,886 +109,895 @@ showreg.asm
      99	    0141  E4 60			     in	al, 60h
     100
     101	    0143  3C 29			     cmp al, SHOW_REG_BUTTON_SCAN_CODE
-    102	    0145  75 08	90 90		     jne ??notNeededSC
+    102	    0145  75 0C	90 90		     jne ??notNeededSC
     103
-    104	    0149  E8 0004			 call drawAllRegs
+    104	    0149  E8 0008			 call drawAllRegs
     105
-    106	    014C  E8 00C4			 call frameDrawingPart
-    107
-    108	    014F			     ??notNeededSC:
+    106	    014C  8C D0				 mov ax, ss
+    107	    014E  8E D8				 mov ds, ax
+    108	    0150  E8 00C9			 call frameDrawingPart
     109
-    110	    014F  C3			     ret
-    111	    0150			 handleScanCode	ENDP
-    112
-    113	    0150			 drawAllRegs PROC
-    114	    0150  BB 008E		     mov bx, _FRAME_TEXT_ADDR
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 3
+    110	    0153			     ??notNeededSC:
+    111
+    112	    0153  C3			     ret
+    113	    0154			 handleScanCode	ENDP
+    114
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 3
 showreg.asm
 
 
 
-    115
-    116	    0153  B9 0001		     mov cx, 1d
+    115	    0154			 drawAllRegs PROC
+    116	    0154  BB 008E		     mov bx, _FRAME_TEXT_ADDR
     117
-    118	    0156  E8 007C		     call putInMemFrameParams
+    118	    0157  B9 0001		     mov cx, 1d
     119
-    120	    0159			     ??StartCycle:
-    121	    0159  83 F9	0E		     cmp cx, AMOUNT_REGS_DUMP +	1d
-    122	    015C  7D 1F	90 90		     jge ??endCycle
-    123	    0160  8B F1				 mov si, cx
-    124	    0162  D1 E6				 shl si, 1	    ; si = cx *	2
-    125	    0164  8B 3A				 mov di, [bp + si]
-    126
-    127						 ; amendment for sp reg	case
-    128	    0166  83 F9	0D			 cmp cx, AMOUNT_REGS_DUMP
-    129	    0169  75 05	90 90			 jne ??notSp
-    130	    016D  83 EF	06			     sub di, 6d	 ; take	into consid pushf, push	cs, push ip
-    131	    0170				 ??notSp:
-    132
-    133	    0170  E8 0010			 call drawReg
+    120	    015A  E8 0081		     call putInMemFrameParams
+    121
+    122	    015D			     ??StartCycle:
+    123	    015D  83 F9	0E		     cmp cx, AMOUNT_REGS_DUMP +	1d
+    124	    0160  7D 1F	90 90		     jge ??endCycle
+    125	    0164  8B F1				 mov si, cx
+    126	    0166  D1 E6				 shl si, 1	    ; si = cx *	2
+    127	    0168  8B 3A				 mov di, [bp + si]
+    128
+    129						 ; amendment for sp reg	case
+    130	    016A  83 F9	0D			 cmp cx, AMOUNT_REGS_DUMP
+    131	    016D  75 05	90 90			 jne ??notSp
+    132	    0171  83 EF	06			     sub di, 6d	 ; take	into consid pushf, push	cs, push ip
+    133	    0174				 ??notSp:
     134
-    135	    0173  36: C6 07 23			 mov byte ptr ss:[bx], '#'
-    136	    0177  83 C3	01			 add bx, 1
-    137						 ; call	moveToNextLineVideoMem
-    138
-    139	    017A  41				 inc cx
-    140	    017B  EB DC				 jmp ??StartCycle
-    141	    017D			     ??endCycle:
-    142
-    143	    017D  C3			     ret
-    144	    017E			 drawAllRegs ENDP
-    145
-    146	    017E			 moveToNextLineVideoMem	PROC
-    147	    017E  81 C3	00A0			 add bx, LENGTH_VIDEO_MEM_LINE * 2d  ; move to next line
-    148	    0182  C3			     ret
-    149	    0183			 moveToNextLineVideoMem	ENDP
+    135	    0174  E8 0015			 call drawReg
+    136
+    137	    0177  36: C6 07 23			 mov byte ptr ss:[bx], '#'
+    138	    017B  83 C3	01			 add bx, 1
+    139						 ; call	moveToNextLineVideoMem
+    140
+    141	    017E  41				 inc cx
+    142	    017F  EB DC				 jmp ??StartCycle
+    143	    0181			     ??endCycle:
+    144
+    145	    0181  4B			     dec bx
+    146	    0182  36: C6 07 24		     mov byte ptr ss:[bx], '$'
+    147
+    148	    0186  C3			     ret
+    149	    0187			 drawAllRegs ENDP
     150
-    151					 ; CDECL
-    152					 ;-----------------------------------------------------------------------
-    153					 ; new Function	performed on int 09h draw regs values on '`' button press
-    154					 ; Entry: di = reg value to draw
-    155					 ; Exit:  no
-    156					 ; Exp:	  no
-    157					 ; Destr: no
-    158					 ;-----------------------------------------------------------------------
-    159
-    160	    0183			 drawReg PROC
-    161	    0183  55			     push bp
-    162	    0184  8B EC			     mov bp, sp
-    163
-    164	    0186  50 51	52 56 57	     push ax cx	dx si di
-    165
-    166					     ; init cycle
-    167
-    168	    018B  B9 0001		     mov cx, 1d
-    169
-    170	    018E  33 D2			     xor dx,dx
-    171	    0190  BA F000		     mov dx, 0f000h   ;	mask for reg nibble
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 4
+    151	    0187			 moveToNextLineVideoMem	PROC
+    152	    0187  81 C3	00A0			 add bx, LENGTH_VIDEO_MEM_LINE * 2d  ; move to next line
+    153	    018B  C3			     ret
+    154	    018C			 moveToNextLineVideoMem	ENDP
+    155
+    156					 ; CDECL
+    157					 ;-----------------------------------------------------------------------
+    158					 ; new Function	performed on int 09h draw regs values on '`' button press
+    159					 ; Entry: di = reg value to draw
+    160					 ; Exit:  no
+    161					 ; Exp:	  no
+    162					 ; Destr: no
+    163					 ;-----------------------------------------------------------------------
+    164
+    165	    018C			 drawReg PROC
+    166	    018C  55			     push bp
+    167	    018D  8B EC			     mov bp, sp
+    168
+    169	    018F  50 51	52 56 57	     push ax cx	dx si di
+    170
+    171					     ; init cycle
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 4
 showreg.asm
 
 
 
     172
-    173
-    174	    0193			     ??startDrawingCycle:
-    175	    0193  83 F9	05		     cmp cx, 5d
-    176	    0196  7D 23	90 90		     jge ??endDrawingCycle
-    177	    019A  8B C7				 mov ax, di
-    178	    019C  23 C2				 and ax, dx
-    179
-    180	    019E  BE 0004			 mov si, 4d
-    181	    01A1  2B F1				 sub si, cx
-    182	    01A3  C1 E6	02			 shl si, 2
-    183
-    184	    01A6  51				 push cx
-    185	    01A7  8B CE				 mov cx, si
-    186	    01A9  D3 E8				 shr ax, cl
-    187	    01AB  59				 pop cx
+    173	    0194  B9 0001		     mov cx, 1d
+    174
+    175	    0197  33 D2			     xor dx,dx
+    176	    0199  BA F000		     mov dx, 0f000h   ;	mask for reg nibble
+    177
+    178
+    179	    019C			     ??startDrawingCycle:
+    180	    019C  83 F9	05		     cmp cx, 5d
+    181	    019F  7D 23	90 90		     jge ??endDrawingCycle
+    182	    01A3  8B C7				 mov ax, di
+    183	    01A5  23 C2				 and ax, dx
+    184
+    185	    01A7  BE 0004			 mov si, 4d
+    186	    01AA  2B F1				 sub si, cx
+    187	    01AC  C1 E6	02			 shl si, 2
     188
-    189	    01AC  E8 0015			 call convertNibbleToASCII
-    190
-    191	    01AF  36: 88 07			 mov byte ptr ss:[bx], al
-    192
-    193	    01B2  83 C3	01			 add bx, 1
-    194	    01B5  C1 EA	04			 shr dx, 4
-    195	    01B8  41				 inc cx
-    196	    01B9  EB D8			     jmp ??startDrawingCycle
-    197	    01BB			     ??endDrawingCycle:
-    198
-    199	    01BB  5F 5E	5A 59 58	     pop di si dx cx ax
-    200
-    201	    01C0  8B E5			     mov sp, bp
-    202	    01C2  5D			     pop bp
-    203	    01C3  C3			     ret
-    204	    01C4			 drawReg ENDP
+    189	    01AF  51				 push cx
+    190	    01B0  8B CE				 mov cx, si
+    191	    01B2  D3 E8				 shr ax, cl
+    192	    01B4  59				 pop cx
+    193
+    194	    01B5  E8 0015			 call convertNibbleToASCII
+    195
+    196	    01B8  36: 88 07			 mov byte ptr ss:[bx], al
+    197
+    198	    01BB  83 C3	01			 add bx, 1
+    199	    01BE  C1 EA	04			 shr dx, 4
+    200	    01C1  41				 inc cx
+    201	    01C2  EB D8			     jmp ??startDrawingCycle
+    202	    01C4			     ??endDrawingCycle:
+    203
+    204	    01C4  5F 5E	5A 59 58	     pop di si dx cx ax
     205
-    206					 ;-----------------------------------------------------------------------
-    207					 ; converts number in nibble to	ASCII
-    208					 ; Entry: ax = nibble
-    209					 ;
-    210					 ; Exit:  ax = ASCII code
-    211					 ; Exp:	  no
-    212					 ; Destr: ax
-    213					 ;-----------------------------------------------------------------------
-    214
-    215	    01C4			 convertNibbleToASCII PROC
-    216					     ; case <= 9
-    217
-    218	    01C4  3D 0009		     cmp ax, 9d
-    219	    01C7  7F 08	90 90		     jg	??G9
-    220	    01CB  05 0030			 add ax, DIFFERENCE_NUM_ASCII_L9
-    221	    01CE  EB 04	90			 jmp ??end
+    206	    01C9  8B E5			     mov sp, bp
+    207	    01CB  5D			     pop bp
+    208	    01CC  C3			     ret
+    209	    01CD			 drawReg ENDP
+    210
+    211					 ;-----------------------------------------------------------------------
+    212					 ; converts number in nibble to	ASCII
+    213					 ; Entry: ax = nibble
+    214					 ;
+    215					 ; Exit:  ax = ASCII code
+    216					 ; Exp:	  no
+    217					 ; Destr: ax
+    218					 ;-----------------------------------------------------------------------
+    219
+    220	    01CD			 convertNibbleToASCII PROC
+    221					     ; case <= 9
     222
-    223	    01D1			     ??G9:
-    224
-    225					     ; case > 9
-    226
-    227	    01D1  05 0037		     add ax, DIFFERENCE_NUM_ASCII_G9
-    228
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 5
+    223	    01CD  3D 0009		     cmp ax, 9d
+    224	    01D0  7F 08	90 90		     jg	??G9
+    225	    01D4  05 0030			 add ax, DIFFERENCE_NUM_ASCII_L9
+    226	    01D7  EB 04	90			 jmp ??end
+    227
+    228	    01DA			     ??G9:
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 5
 showreg.asm
 
 
 
-    229	    01D4			     ??end:
-    230	    01D4  C3			     ret
-    231	    01D5			 convertNibbleToASCII ENDP
-    232
-    233	    01D5			 putInMemFrameParams PROC
-    234	    01D5  50 51	56 57		     push ax cx	si di
-    235
-    236	    01D9  BE 0080		     mov si, FRAME_INIT_LEN_ADDR
-    237	    01DC  36: C6 04 01		     mov byte ptr ss:[si], 1d
-    238
-    239	    01E0  BE 0082		     mov si, _FRAME_MODE_ADDR
-    240	    01E3  36: C6 04 03		     mov byte ptr ss:[si], 3d
-    241
-    242	    01E7  BE 0084		     mov si, _FRAME_SYMBOLS_START_ADDR
+    229
+    230					     ; case > 9
+    231
+    232	    01DA  05 0037		     add ax, DIFFERENCE_NUM_ASCII_G9
+    233
+    234	    01DD			     ??end:
+    235	    01DD  C3			     ret
+    236	    01DE			 convertNibbleToASCII ENDP
+    237
+    238	    01DE			 putInMemFrameParams PROC
+    239	    01DE  50 51	56 57		     push ax cx	si di
+    240
+    241	    01E2  BE 0080		     mov si, FRAME_INIT_LEN_ADDR
+    242	    01E5  36: C6 04 01		     mov byte ptr ss:[si], 1d
     243
-    244	    01EA  BE 0103r		     mov si, offset frameSymbolsStr
-    245	    01ED  BF 0084		     mov di, _FRAME_SYMBOLS_START_ADDR
-    246	    01F0  B9 0009		     mov cx, 9d
-    247	    01F3  1E 06			     push ds es
+    244	    01E9  BE 0082		     mov si, _FRAME_MODE_ADDR
+    245	    01EC  36: C6 04 03		     mov byte ptr ss:[si], 3d
+    246
+    247	    01F0  BE 0084		     mov si, _FRAME_SYMBOLS_START_ADDR
     248
-    249	    01F5  8C C8			     mov ax, cs
-    250	    01F7  8E D8			     mov ds, ax
-    251	    01F9  8E C0			     mov es, ax
-    252
-    253	    01FB  F3> A4		     rep movsb
-    254
-    255	    01FD  07 1F			     pop es ds
-    256
-    257	    01FF  5F 5E	59 58		     pop di si cx ax
-    258	    0203  C3			     ret
-    259	    0204			 putInMemFrameParams ENDP
-    260
-    261					 ;-----------------------------------------------------------------------
-    262					 ; reset controllers to	original state
-    263					 ; Entry: no
-    264					 ; Exit:  no
-    265					 ; Exp:	  no
-    266					 ; Destr: al
-    267					 ;-----------------------------------------------------------------------
-    268
-    269	    0204			 resetControllers PROC
-    270					     ; reset keyboard controller MSB to	guarantee that keyboard	controller will	continue to +
-    271					 gen scan-codes
-    272	    0204  E4 61			     in	al, 61h
-    273	    0206  0C 80			     or	al, 80h
-    274	    0208  E6 61			     out 61h, al
-    275	    020A  24 7F			     and al, not 80h
-    276	    020C  E6 61			     out 61h, al
-    277
-    278					     ; send EOI	to interrupt controller
-    279	    020E  B0 20			     mov al, EOI
-    280	    0210  E6 20			     out 20h, al
-    281
-    282	    0212  C3			     ret
-    283	    0213			 resetControllers ENDP
-    284
-    285
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 6
+    249	    01F3  BE 0103r		     mov si, offset frameSymbolsStr
+    250	    01F6  BF 0084		     mov di, _FRAME_SYMBOLS_START_ADDR
+    251	    01F9  B9 0009		     mov cx, 9d
+    252	    01FC  1E 06			     push ds es
+    253
+    254	    01FE  8C C8			     mov ax, cs
+    255	    0200  8E D8			     mov ds, ax
+    256	    0202  8E C0			     mov es, ax
+    257
+    258	    0204  F3> A4		     rep movsb
+    259
+    260	    0206  07 1F			     pop es ds
+    261
+    262	    0208  5F 5E	59 58		     pop di si cx ax
+    263	    020C  C3			     ret
+    264	    020D			 putInMemFrameParams ENDP
+    265
+    266					 ;-----------------------------------------------------------------------
+    267					 ; reset controllers to	original state
+    268					 ; Entry: no
+    269					 ; Exit:  no
+    270					 ; Exp:	  no
+    271					 ; Destr: al
+    272					 ;-----------------------------------------------------------------------
+    273
+    274	    020D			 resetControllers PROC
+    275					     ; reset keyboard controller MSB to	guarantee that keyboard	controller will	continue to +
+    276					 gen scan-codes
+    277	    020D  E4 61			     in	al, 61h
+    278	    020F  0C 80			     or	al, 80h
+    279	    0211  E6 61			     out 61h, al
+    280	    0213  24 7F			     and al, not 80h
+    281	    0215  E6 61			     out 61h, al
+    282
+    283					     ; send EOI	to interrupt controller
+    284	    0217  B0 20			     mov al, EOI
+    285	    0219  E6 20			     out 20h, al
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 6
 showreg.asm
 
 
 
     286
-    287
-    288
-    289					 ;-------------------------------------------------
-    290					 ; frame drawing part
-    291					 ; ------------------------------------------------
+    287	    021B  C3			     ret
+    288	    021C			 resetControllers ENDP
+    289
+    290
+    291
     292
-    293	    0213			 frameDrawingPart PROC
-    294	    0213  B8 B800		     mov ax, 0B800h  ; initializing video memory segment register
-    295	    0216  8E C0				 mov es, ax
-    296
-    297	    0218  33 DB				 xor bx, bx
-    298	    021A  BB 0370			 mov bx, 160d *	5d + 80d; init video segment shift
-    299
-    300	    021D  B6 24				 mov dh, 24h ; $ ASCII endStrSym
-    301
-    302						 ; read	mode from cmd and put in dl symbol for frame
-    303
-    304	    021F  E8 0001			 call animationMode
-    305
-    306	    0222  C3			     ret
-    307	    0223			 frameDrawingPart ENDP
-    308
-    309					 ;-----------------------------------------------------------------------
-    310					 ; makes frame animation
-    311					 ; Entry: dh = ensStr symbol
-    312					 ; Exit:  nop
-    313					 ; Exp:	  nop
-    314					 ; Destr: ax, bx, cx, dx, di, si
-    315					 ;-----------------------------------------------------------------------
+    293
+    294					 ;-------------------------------------------------
+    295					 ; frame drawing part
+    296					 ; ------------------------------------------------
+    297
+    298		  =000D			 COLOR				 EQU 0dh
+    299		  =005E			 TEXT_COLOR			 EQU 5Eh
+    300
+    301		  =0004			 NO_MODE_SYMB		 EQU 04h
+    302		  =0003			 MODE_ONE_SYMB		 EQU 03h
+    303		  =0005			 MODE_TWO_SYMB		 EQU 05h
+    304
+    305		  =0023			 NEW_LINE_SYMB		 EQU '#'
+    306		  =0024			 END_STR_INPUT_SYMB	 EQU '$'
+    307
+    308	    021C			 frameDrawingPart PROC
+    309	    021C  B8 B800		     mov ax, 0B800h  ; initializing video memory segment register
+    310	    021F  8E C0				 mov es, ax
+    311
+    312	    0221  33 DB				 xor bx, bx
+    313	    0223  BB 0370			 mov bx, 160d *	5d + 80d; init video segment shift
+    314
+    315	    0226  B6 24				 mov dh, 24h ; $ ASCII endStrSym
     316
-    317	    0223			 animationMode PROC
-    318	    0223  E8 001D			 call initAnimation
-    319
-    320	    0226  E8 0029			 call calcStartStep
-    321
-    322						 ; mov cx, di
-    323	    0229				 StartAnimationCycle:
-    324	    0229  3A F0				 cmp dh, al
-    325	    022B  7F 15	90 90			 jg endAnimationCycle
-    326	    022F  50					 push ax
-    327
-    328	    0230  8B 36	0000				 mov si, FRAME_SYM_START_ADDR
-**Error** showreg.asm(323) Undefined symbol: FRAME_SYM_START_ADDR
-    329
-    330	    0234  33 DB					 xor bx, bx
-    331	    0236  BB 0370			     mov bx, 160 * 5 + 80; init	video segment shift
-    332
-    333	    0239  E8 002A				 call animationDrawFrame
+    317						 ; read	mode from cmd and put in dl symbol for frame
+    318
+    319	    0228  E8 0001			 call animationMode
+    320
+    321	    022B  C3			     ret
+    322	    022C			 frameDrawingPart ENDP
+    323
+    324					 ;-----------------------------------------------------------------------
+    325					 ; makes frame animation
+    326					 ; Entry: dh = ensStr symbol
+    327					 ; Exit:  nop
+    328					 ; Exp:	  nop
+    329					 ; Destr: ax, bx, cx, dx, di, si
+    330					 ;-----------------------------------------------------------------------
+    331
+    332	    022C			 animationMode PROC
+    333	    022C  E8 001C			 call initAnimation
     334
-    335	    023C  80 C6	02				 add dh, 2
+    335	    022F  E8 0027			 call calcStartStep
     336
-    337	    023F  58					 pop ax
-    338	    0240  EB E7				 jmp StartAnimationCycle
-    339	    0242				 endAnimationCycle:
-    340
-    341	    0242  C3				 ret
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 7
+    337						 ; mov cx, di
+    338	    0232				 StartAnimationCycle:
+    339	    0232  3A F0				 cmp dh, al
+    340	    0234  7F 14	90 90			 jg endAnimationCycle
+    341	    0238  50					 push ax
+    342
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 7
 showreg.asm
 
 
 
-    342	    0243			 animationMode ENDP
-    343
-    344	    0243			 initAnimation PROC
-    345	    0243  8B 36	0000		     mov si, TEXT_START_ADDR
-**Error** showreg.asm(340) Undefined symbol: TEXT_START_ADDR
-    346	    0247  E8 016C		     call countLineMaxLen
-    347	    024A  8B F8			     mov di, ax
-    348	    024C  E8 00EF		     call getAnimationIterationsCount
-    349	    024F  8A D0			     mov dl, al
-    350	    0251  C3			     ret
-    351	    0252			 initAnimation ENDP
-    352
-    353	    0252			 calcStartStep PROC
-    354	    0252  32 F6				 xor dh, dh
+    343	    0239  BE 0084				 mov si, _FRAME_SYMBOLS_START_ADDR
+    344
+    345	    023C  33 DB					 xor bx, bx
+    346	    023E  BB 0370			     mov bx, 160 * 5 + 80; init	video segment shift
+    347
+    348	    0241  E8 0029				 call animationDrawFrame
+    349
+    350	    0244  80 C6	02				 add dh, 2
+    351
+    352	    0247  58					 pop ax
+    353	    0248  EB E8				 jmp StartAnimationCycle
+    354	    024A				 endAnimationCycle:
     355
-    356	    0254  F7 C1	0001			 test cx, 1
-    357	    0258  74 08	90 90			 jz ??not_odd
-    358	    025C  80 C6	03				 add dh, 3d
-    359	    025F  EB 04	90				 jmp ??is_odd
-    360	    0262				 ??not_odd:
-    361	    0262  80 C6	02			 add dh, 2d
-    362	    0265				 ??is_odd:
-    363	    0265  C3				 ret
-    364	    0266			 calcStartStep ENDP
-    365
-    366	    0266			 animationDrawFrame PROC
-    367						 ; put align num in ax
-    368	    0266  33 C0				 xor ax, ax
-    369	    0268  8A C6				 mov al, dh
-    370	    026A  02 C0				 add al, al
-    371	    026C  E8 01A0			 call alignFrame
-    372
-    373	    026F  E8 0009			 call animationDrawFrameLines
-    374
-    375	    0272  51				 push cx
-    376	    0273  B9 FDE8			 mov cx, 65000d
-    377	    0276  E8 01A8			 call delayForAnimation
-    378	    0279  59				 pop cx
-    379
-    380	    027A  C3				 ret
-    381	    027B			 animationDrawFrame ENDP
-    382
-    383	    027B			 animationDrawFrameLines PROC
-    384						 ; init	cycle
-    385	    027B  B8 0005			 mov ax, 5d
-    386	    027E  03 C7				 add ax, di
-    387	    0280  B4 01				 mov ah,1
-    388	    0282				 lineLoop:
-    389	    0282  3A E0					 cmp ah, al
-    390	    0284  7D 09	90 90				 jge done
-    391
-    392	    0288  E8 0005				 call animationDrawSingleLine
-    393
-    394	    028B  FE C4					 inc ah
-    395	    028D  EB F3					 jmp lineLoop
-    396	    028F				 done:
-    397	    028F  C3					 ret
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 8
+    356	    024A  C3				 ret
+    357	    024B			 animationMode ENDP
+    358
+    359	    024B			 initAnimation PROC
+    360	    024B  BE 008E		     mov si, _FRAME_TEXT_ADDR
+    361	    024E  E8 0170		     call countLineMaxLen
+    362	    0251  8B F8			     mov di, ax
+    363	    0253  E8 00F2		     call getAnimationIterationsCount
+    364	    0256  8A D0			     mov dl, al
+    365	    0258  C3			     ret
+    366	    0259			 initAnimation ENDP
+    367
+    368	    0259			 calcStartStep PROC
+    369	    0259  32 F6				 xor dh, dh
+    370
+    371	    025B  F7 C1	0001			 test cx, 1
+    372	    025F  74 08	90 90			 jz ??not_odd
+    373	    0263  80 C6	03				 add dh, 3d
+    374	    0266  EB 04	90				 jmp ??is_odd
+    375	    0269				 ??not_odd:
+    376	    0269  80 C6	02			 add dh, 2d
+    377	    026C				 ??is_odd:
+    378	    026C  C3				 ret
+    379	    026D			 calcStartStep ENDP
+    380
+    381	    026D			 animationDrawFrame PROC
+    382						 ; put align num in ax
+    383	    026D  33 C0				 xor ax, ax
+    384	    026F  8A C6				 mov al, dh
+    385	    0271  02 C0				 add al, al
+    386	    0273  E8 01A0			 call alignFrame
+    387
+    388	    0276  E8 0009			 call animationDrawFrameLines
+    389
+    390	    0279  51				 push cx
+    391	    027A  B9 FDE8			 mov cx, 65000d
+    392	    027D  E8 01A8			 call delayForAnimation
+    393	    0280  59				 pop cx
+    394
+    395	    0281  C3				 ret
+    396	    0282			 animationDrawFrame ENDP
+    397
+    398	    0282			 animationDrawFrameLines PROC
+    399						 ; init	cycle
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 8
 showreg.asm
 
 
 
-    398	    0290			 animationDrawFrameLines ENDP
-    399
-    400	    0290			 animationDrawSingleLine PROC
-    401	    0290  50				 push ax
-    402	    0291  52				 push dx
-    403
-    404	    0292  53				 push bx
-    405	    0293  E8 006F			 call countTextStartLine
-    406						 ; special text	case
-    407	    0296  3A E3				 cmp ah, bl
-    408	    0298  5B				 pop bx
-    409	    0299  75 2F	90 90			 jne notTextStr2
-    410	    029D  5A					 pop dx
-    411	    029E  3A F2					 cmp dh, dl
-    412	    02A0  52					 push dx
-    413	    02A1  7C 27	90 90				 jl notTextStr2
+    400	    0282  B8 0005			 mov ax, 5d
+    401	    0285  03 C7				 add ax, di
+    402	    0287  B4 01				 mov ah,1
+    403	    0289				 lineLoop:
+    404	    0289  3A E0					 cmp ah, al
+    405	    028B  7D 09	90 90				 jge done
+    406
+    407	    028F  E8 0005				 call animationDrawSingleLine
+    408
+    409	    0292  FE C4					 inc ah
+    410	    0294  EB F3					 jmp lineLoop
+    411	    0296				 done:
+    412	    0296  C3					 ret
+    413	    0297			 animationDrawFrameLines ENDP
     414
-    415	    02A5  8B 36	0000				 mov si	, TEXT_START_ADDR
-**Error** showreg.asm(410) Undefined symbol: TEXT_START_ADDR
-    416	    02A9					 ??textPrintCycle:
-    417	    02A9  83 FF	00				 cmp di	, 0d
-    418	    02AC  7E 19	90 90				 jle ??printedStr
-    419	    02B0  57						 push di
-    420	    02B1  8B FE						 mov di, si
-    421
-    422	    02B3  E8 003D					 call startFrameLine
-    423
-    424	    02B6  E8 0056					 call animationDrawText
-    425
-    426	    02B9  E8 0043					 call endFrameLine
-    427
-    428	    02BC  8B F7						 mov si, di
-    429	    02BE  5F						 pop di
-    430
-    431	    02BF  5A						 pop dx
-    432	    02C0  E8 0023					 call moveBaseToNextLineStartPos
-    433	    02C3  52						 push dx
-    434
-    435
-    436	    02C4  4F						 dec di
-    437	    02C5  EB E2					 jmp ??textPrintCycle
+    415	    0297			 animationDrawSingleLine PROC
+    416	    0297  50				 push ax
+    417	    0298  52				 push dx
+    418
+    419	    0299  53				 push bx
+    420	    029A  E8 0071			 call countTextStartLine
+    421						 ; special text	case
+    422	    029D  3A E3				 cmp ah, bl
+    423	    029F  5B				 pop bx
+    424	    02A0  75 2E	90 90			 jne notTextStr2
+    425	    02A4  5A					 pop dx
+    426	    02A5  3A F2					 cmp dh, dl
+    427	    02A7  52					 push dx
+    428	    02A8  7C 26	90 90				 jl notTextStr2
+    429
+    430	    02AC  BE 008E				 mov si	, _FRAME_TEXT_ADDR
+    431	    02AF					 ??textPrintCycle:
+    432	    02AF  83 FF	00				 cmp di	, 0d
+    433	    02B2  7E 19	90 90				 jle ??printedStr
+    434	    02B6  57						 push di
+    435	    02B7  8B FE						 mov di, si
+    436
+    437	    02B9  E8 003E					 call startFrameLine
     438
-    439	    02C7					 ??printedStr:
-    440	    02C7  5A					 pop dx
-    441
-    442	    02C8  58					 pop ax
-    443	    02C9  C3					 ret
-    444	    02CA				 notTextStr2:
+    439	    02BC  E8 0059					 call animationDrawText
+    440
+    441	    02BF  E8 0045					 call endFrameLine
+    442
+    443	    02C2  8B F7						 mov si, di
+    444	    02C4  5F						 pop di
     445
-    446	    02CA  E8 0026			 call startFrameLine
-    447
-    448	    02CD  8A 14				 mov dl, [si]
-    449	    02CF  83 C6	01			 add si, 1d
+    446	    02C5  5A						 pop dx
+    447	    02C6  E8 0024					 call moveBaseToNextLineStartPos
+    448	    02C9  52						 push dx
+    449
     450
-    451	    02D2  33 C0				 xor ax, ax
-    452	    02D4  8A C6				 mov al, dh
-    453	    02D6  2C 02				 sub al, 2d
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 9
+    451	    02CA  4F						 dec di
+    452	    02CB  EB E2					 jmp ??textPrintCycle
+    453
+    454	    02CD					 ??printedStr:
+    455	    02CD  5A					 pop dx
+    456
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 9
 showreg.asm
 
 
 
-    454
-    455	    02D8  57				 push di
-    456	    02D9  E8 00A2			 call printFrame
-    457	    02DC  5F				 pop di
-    458
-    459	    02DD  E8 001F			 call endFrameLine
+    457	    02CE  58					 pop ax
+    458	    02CF  C3					 ret
+    459	    02D0				 notTextStr2:
     460
-    461	    02E0  5A				 pop dx
+    461	    02D0  E8 0027			 call startFrameLine
     462
-    463	    02E1  E8 0002			 call moveBaseToNextLineStartPos
-    464
-    465	    02E4  58				 pop ax
-    466	    02E5  C3				 ret
-    467	    02E6			 animationDrawSingleLine ENDP
-    468
-    469	    02E6			 moveBaseToNextLineStartPos PROC
-    470
-    471	    02E6  33 C0				 xor ax, ax
-    472	    02E8  8A C6				 mov al, dh
-    473	    02EA  D1 E0				 shl ax, 1	  ; ax = dh * 2
-    474	    02EC  2B D8				 sub bx, ax
+    463	    02D3  36: 8A 14			 mov dl, ss:[si]
+    464	    02D6  83 C6	01			 add si, 1d
+    465
+    466	    02D9  33 C0				 xor ax, ax
+    467	    02DB  8A C6				 mov al, dh
+    468	    02DD  2C 02				 sub al, 2d
+    469
+    470	    02DF  57				 push di
+    471	    02E0  E8 00A7			 call printFrame
+    472	    02E3  5F				 pop di
+    473
+    474	    02E4  E8 0020			 call endFrameLine
     475
-    476	    02EE  81 C3	00A0			 add bx, 160	 ; move	to next	line
+    476	    02E7  5A				 pop dx
     477
-    478	    02F2  C3				 ret
-    479	    02F3			 moveBaseToNextLineStartPos ENDP
-    480
-    481	    02F3			 startFrameLine	PROC
-    482	    02F3  E8 0069			 call findSymForStr
+    478	    02E8  E8 0002			 call moveBaseToNextLineStartPos
+    479
+    480	    02EB  58				 pop ax
+    481	    02EC  C3				 ret
+    482	    02ED			 animationDrawSingleLine ENDP
     483
-    484	    02F6  8A 14				 mov dl, [si]
-    485	    02F8  83 C6	01			 add si, 1d
-    486	    02FB  E8 00FC			 call outSymbol
-    487
-    488	    02FE  C3				 ret
-    489	    02FF			 startFrameLine	ENDP
+    484	    02ED			 moveBaseToNextLineStartPos PROC
+    485
+    486	    02ED  33 C0				 xor ax, ax
+    487	    02EF  8A C6				 mov al, dh
+    488	    02F1  D1 E0				 shl ax, 1	  ; ax = dh * 2
+    489	    02F3  2B D8				 sub bx, ax
     490
-    491	    02FF			 endFrameLine PROC
-    492	    02FF  8A 14				 mov dl, [si]
-    493	    0301  E8 00F6			 call outSymbol
-    494
-    495	    0304  C3				 ret
-    496	    0305			 endFrameLine ENDP
-    497
-    498					 ;cdecl
-    499	    0305			 countTextStartLine PROC
-    500	    0305  33 DB				 xor bx, bx
-    501
-    502	    0307  8A D8				 mov bl, al
-    503
-    504	    0309  C0 EB	02			 shr bl, 2
-    505	    030C  D0 E3				 shl bl, 1
-    506
-    507	    030E  C3				 ret
-    508	    030F			 countTextStartLine ENDP
+    491	    02F5  81 C3	00A0			 add bx, 160	 ; move	to next	line
+    492
+    493	    02F9  C3				 ret
+    494	    02FA			 moveBaseToNextLineStartPos ENDP
+    495
+    496	    02FA			 startFrameLine	PROC
+    497	    02FA  E8 006E			 call findSymForStr
+    498
+    499	    02FD  36: 8A 14			 mov dl, ss:[si]
+    500	    0300  83 C6	01			 add si, 1d
+    501	    0303  E8 00FB			 call outSymbol
+    502
+    503	    0306  C3				 ret
+    504	    0307			 startFrameLine	ENDP
+    505
+    506	    0307			 endFrameLine PROC
+    507	    0307  36: 8A 14			 mov dl, ss:[si]
+    508	    030A  E8 00F4			 call outSymbol
     509
-    510					 ;-----------------------------------------------------------------------
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 10
+    510	    030D  C3				 ret
+    511	    030E			 endFrameLine ENDP
+    512
+    513					 ;cdecl
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 10
 showreg.asm
 
 
 
-    511					 ; Animation string with text handle
-    512					 ; Entry: si = symbol to print addr
-    513					 ;		  cx = len text	space in line
-    514					 ;		  di = addr text in memory
-    515					 ; Exit:  nop
-    516					 ; Exp:	  zf = 0 means length str is even
-    517					 ;		  zf = 1 means length str is odd
-    518					 ; Destr: dl, si, bx, ah, di, cx
-    519					 ;-----------------------------------------------------------------------
-    520
-    521	    030F			 animationDrawText PROC
-    522	    030F  8A 14				 mov dl, [si]
-    523	    0311  E8 00E6			 call outSymbol
-    524	    0314  E8 00E3			 call outSymbol
-    525	    0317  83 C6	01			 add si, 1d
-    526
-    527	    031A  B6 24				 mov dh, '$'
-    528
-    529	    031C  51				 push cx
-    530
-    531	    031D  56				 push si
-    532	    031E  8B F7				 mov  si, di
-    533
-    534	    0320  E8 0073			 call printText
-    535	    0323  83 C6	01			 add si, 1d  ;skip # symbol
-    536	    0326  8B FE				 mov di, si
-    537
-    538	    0328  5E				 pop si
-    539
-    540	    0329				 ??beginFillFreeSpace:
-    541	    0329  83 F9	00			 cmp cx, 0d
-    542	    032C  7E 08	90 90			 jle ??endedFillFreeSpace
-    543	    0330  E8 00C7				 call outSymbol
-    544	    0333  49					 dec cx
-    545	    0334  EB F3				 jmp ??beginFillFreeSpace
-    546	    0336				 ??endedFillFreeSpace:
-    547
-    548	    0336  E8 00C1			 call outSymbol
-    549	    0339  E8 00BE			 call outSymbol
-    550
-    551	    033C  59				 pop cx
+    514	    030E			 countTextStartLine PROC
+    515	    030E  33 DB				 xor bx, bx
+    516
+    517	    0310  8A D8				 mov bl, al
+    518
+    519	    0312  C0 EB	02			 shr bl, 2
+    520	    0315  D0 E3				 shl bl, 1
+    521
+    522	    0317  C3				 ret
+    523	    0318			 countTextStartLine ENDP
+    524
+    525					 ;-----------------------------------------------------------------------
+    526					 ; Animation string with text handle
+    527					 ; Entry: si = symbol to print addr
+    528					 ;		  cx = len text	space in line
+    529					 ;		  di = addr text in memory
+    530					 ; Exit:  nop
+    531					 ; Exp:	  zf = 0 means length str is even
+    532					 ;		  zf = 1 means length str is odd
+    533					 ; Destr: dl, si, bx, ah, di, cx
+    534					 ;-----------------------------------------------------------------------
+    535
+    536	    0318			 animationDrawText PROC
+    537	    0318  36: 8A 14			 mov dl, ss:[si]
+    538	    031B  E8 00E3			 call outSymbol
+    539	    031E  E8 00E0			 call outSymbol
+    540	    0321  83 C6	01			 add si, 1d
+    541
+    542	    0324  B6 24				 mov dh, '$'
+    543
+    544	    0326  51				 push cx
+    545
+    546	    0327  56				 push si
+    547	    0328  8B F7				 mov  si, di
+    548
+    549	    032A  E8 0075			 call printText
+    550	    032D  83 C6	01			 add si, 1d  ;skip # symbol
+    551	    0330  8B FE				 mov di, si
     552
-    553	    033D  C3				 ret
-    554	    033E			 animationDrawText ENDP
-    555
-    556					 ;-----------------------------------------------------------------------
-    557					 ; finds amount	of animation iterations
-    558					 ; Entry: cx = final frame size
-    559					 ; Exit:  al = amount of animation iterations
-    560					 ; Exp:	  nop
-    561					 ; Destr: al
-    562					 ;-----------------------------------------------------------------------
-    563
-    564	    033E			 getAnimationIterationsCount PROC
-    565	    033E  33 C0				 xor ax, ax
-    566	    0340  8A C1				 mov al, cl
+    553	    0332  5E				 pop si
+    554
+    555	    0333				 ??beginFillFreeSpace:
+    556	    0333  83 F9	00			 cmp cx, 0d
+    557	    0336  7E 08	90 90			 jle ??endedFillFreeSpace
+    558	    033A  E8 00C4				 call outSymbol
+    559	    033D  49					 dec cx
+    560	    033E  EB F3				 jmp ??beginFillFreeSpace
+    561	    0340				 ??endedFillFreeSpace:
+    562
+    563	    0340  E8 00BE			 call outSymbol
+    564	    0343  E8 00BB			 call outSymbol
+    565
+    566	    0346  59				 pop cx
     567
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 11
+    568	    0347  C3				 ret
+    569	    0348			 animationDrawText ENDP
+    570
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 11
 showreg.asm
 
 
 
-    568	    0342  04 06				 add al, 6d
-    569
-    570	    0344  C3				 ret
-    571	    0345			 getAnimationIterationsCount ENDP
-    572
-    573					 ;-----------------------------------------------------------------------
-    574					 ; makes preamble for string with text in complicatedMode
-    575					 ; Entry: si = pointer to next symbol to print
-    576					 ; Exit:  nop
-    577					 ; Exp:	  nop
-    578					 ; Destr: dl, bx
-    579					 ;-----------------------------------------------------------------------
-    580
-    581	    0345			 printCompModeStrPreamble PROC
-    582	    0345  E8 00B2			 call outSymbol
-    583
-    584	    0348  46				 inc si
-    585	    0349  8A 14				 mov dl, [si]
-    586	    034B  E8 00AC			 call outSymbol
-    587	    034E  E8 00A9			 call outSymbol
-    588
-    589	    0351  C3				 ret
-    590	    0352			 printCompModeStrPreamble ENDP
-    591
-    592					 ;-----------------------------------------------------------------------
-    593					 ; makes postamble for string with text	in complicatedMode
-    594					 ; Entry: si = pointer to next symbol to print
-    595					 ; Exit:  nop
-    596					 ; Exp:	  nop
-    597					 ; Destr: dl, bx
-    598					 ;-----------------------------------------------------------------------
-    599
-    600	    0352			 printCompModeStrPostamble PROC
-    601	    0352  E8 00A5			 call outSymbol
-    602	    0355  E8 00A2			 call outSymbol
+    571					 ;-----------------------------------------------------------------------
+    572					 ; finds amount	of animation iterations
+    573					 ; Entry: cx = final frame size
+    574					 ; Exit:  al = amount of animation iterations
+    575					 ; Exp:	  nop
+    576					 ; Destr: al
+    577					 ;-----------------------------------------------------------------------
+    578
+    579	    0348			 getAnimationIterationsCount PROC
+    580	    0348  33 C0				 xor ax, ax
+    581	    034A  8A C1				 mov al, cl
+    582
+    583	    034C  04 06				 add al, 6d
+    584
+    585	    034E  C3				 ret
+    586	    034F			 getAnimationIterationsCount ENDP
+    587
+    588					 ;-----------------------------------------------------------------------
+    589					 ; makes preamble for string with text in complicatedMode
+    590					 ; Entry: si = pointer to next symbol to print
+    591					 ; Exit:  nop
+    592					 ; Exp:	  nop
+    593					 ; Destr: dl, bx
+    594					 ;-----------------------------------------------------------------------
+    595
+    596	    034F			 printCompModeStrPreamble PROC
+    597	    034F  E8 00AF			 call outSymbol
+    598
+    599	    0352  46				 inc si
+    600	    0353  36: 8A 14			 mov dl, ss:[si]
+    601	    0356  E8 00A8			 call outSymbol
+    602	    0359  E8 00A5			 call outSymbol
     603
-    604	    0358  46				 inc si
-    605	    0359  8A 14				 mov dl, [si]
-    606	    035B  E8 009C			 call outSymbol
-    607
-    608	    035E  C3				 ret
-    609	    035F			 printCompModeStrPostamble ENDP
-    610
-    611					 ;-----------------------------------------------------------------------
-    612					 ; pareses current needed symbols of frame from	cmd line
-    613					 ; Entry: ah = current str to print
-    614					 ;		  al = last str
-    615					 ; Exit:  si = pointer to the needed symbol in cmd line
-    616					 ; Exp:	  nop
-    617					 ; Destr: si
-    618					 ;-----------------------------------------------------------------------
-    619
-    620	    035F			 findSymForStr PROC
-    621	    035F  80 FC	01			 cmp ah, 1
-    622	    0362  75 06	90 90			 jne notFirst
-    623	    0366  BE 0084				 mov si, 84h
-    624	    0369  C3					 ret
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 12
-showreg.asm
-
-
-
+    604	    035C  C3				 ret
+    605	    035D			 printCompModeStrPreamble ENDP
+    606
+    607					 ;-----------------------------------------------------------------------
+    608					 ; makes postamble for string with text	in complicatedMode
+    609					 ; Entry: si = pointer to next symbol to print
+    610					 ; Exit:  nop
+    611					 ; Exp:	  nop
+    612					 ; Destr: dl, bx
+    613					 ;-----------------------------------------------------------------------
+    614
+    615	    035D			 printCompModeStrPostamble PROC
+    616	    035D  E8 00A1			 call outSymbol
+    617	    0360  E8 009E			 call outSymbol
+    618
+    619	    0363  46				 inc si
+    620	    0364  36: 8A 14			 mov dl, ss:[si]
+    621	    0367  E8 0097			 call outSymbol
+    622
+    623	    036A  C3				 ret
+    624	    036B			 printCompModeStrPostamble ENDP
     625
-    626	    036A				 notFirst:
-    627	    036A  2C 01				 sub al, 1
-    628	    036C  3A E0				 cmp ah, al
-    629
-    630	    036E  75 08	90 90			 jne notLast
-    631	    0372  BE 008A				 mov si, 84h + 6
-    632	    0375  E9 FE5C				 jmp ??end
-    633	    0378				 notLast:
+    626					 ;-----------------------------------------------------------------------
+    627					 ; pareses current needed symbols of frame from	cmd line
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 12
+showreg.asm
+
+
+
+    628					 ; Entry: ah = current str to print
+    629					 ;		  al = last str
+    630					 ; Exit:  si = pointer to the needed symbol in cmd line
+    631					 ; Exp:	  nop
+    632					 ; Destr: si
+    633					 ;-----------------------------------------------------------------------
     634
-    635	    0378  BE 0087			 mov si, 84h + 3
-    636
-    637	    037B				 ??end:
-**Error** showreg.asm(632) Symbol already defined elsewhere: ??END
-    638	    037B  04 01				 add al, 1
-    639	    037D  C3				 ret
-    640	    037E			 findSymForStr ENDP
-    641
-    642					 ;-----------------------------------------------------------------------
-    643					 ; puts	string of symbol to videoMem
-    644					 ; Entry: dl = symbol to print with
-    645					 ;		  dh = color code
-    646					 ;		  ax = amount symbols to print
-    647					 ; Exit:  nop
-    648					 ; Exp:	  nop
-    649					 ; Destr: di, bx
-    650					 ;-----------------------------------------------------------------------
+    635	    036B			 findSymForStr PROC
+    636	    036B  80 FC	01			 cmp ah, 1
+    637	    036E  75 06	90 90			 jne notFirst
+    638	    0372  BE 0084				 mov si, 84h
+    639	    0375  C3					 ret
+    640
+    641	    0376				 notFirst:
+    642	    0376  2C 01				 sub al, 1
+    643	    0378  3A E0				 cmp ah, al
+    644
+    645	    037A  75 08	90 90			 jne notLast
+    646	    037E  BE 008A				 mov si, 84h + 6
+    647	    0381  EB 04	90				 jmp ??endFind
+    648	    0384				 notLast:
+    649
+    650	    0384  BE 0087			 mov si, 84h + 3
     651
-    652	    037E			 printFrame PROC
-    653
-    654	    037E  BF 0000			 mov di, 0
-    655	    0381				 frameCycleStart:
-    656	    0381  3B F8				 cmp di, ax
-    657	    0383  7D 10	90 90			 jge endFrameCycle
-    658
-    659	    0387  26: 88 17			 mov byte ptr es:[bx], dl
-    660	    038A  26: C6 47 01 00		 mov byte ptr es:[bx + 1], COLOR
-**Error** showreg.asm(655) Undefined symbol: COLOR
-    661
-    662	    038F  47				 inc di
-    663	    0390  83 C3	02			 add bx, 2
-    664
-    665	    0393  EB EC				 jmp frameCycleStart
+    652	    0387				 ??endFind:
+    653	    0387  04 01				 add al, 1
+    654	    0389  C3				 ret
+    655	    038A			 findSymForStr ENDP
+    656
+    657					 ;-----------------------------------------------------------------------
+    658					 ; puts	string of symbol to videoMem
+    659					 ; Entry: dl = symbol to print with
+    660					 ;		  dh = color code
+    661					 ;		  ax = amount symbols to print
+    662					 ; Exit:  nop
+    663					 ; Exp:	  nop
+    664					 ; Destr: di, bx
+    665					 ;-----------------------------------------------------------------------
     666
-    667	    0395				 endFrameCycle:
+    667	    038A			 printFrame PROC
     668
-    669	    0395  C3				 ret
-    670	    0396			 printFrame ENDP
-    671
-    672					 ;-----------------------------------------------------------------------
-    673					 ; puts	string to videoMem
-    674					 ; Entry: Entry: si = pointer to the begin of str
-    675					 ; Exit:  cx = amountNotFilledSpace
-    676					 ; Exp:	  dh = ensStr symbol ASCII code
-    677					 ;
-    678					 ; Destr: ah, si, bx, cx
-    679					 ;-----------------------------------------------------------------------
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 13
+    669	    038A  BF 0000			 mov di, 0
+    670	    038D				 frameCycleStart:
+    671	    038D  3B F8				 cmp di, ax
+    672	    038F  7D 10	90 90			 jge endFrameCycle
+    673
+    674	    0393  26: 88 17			 mov byte ptr es:[bx], dl
+    675	    0396  26: C6 47 01 0D		 mov byte ptr es:[bx + 1], COLOR
+    676
+    677	    039B  47				 inc di
+    678	    039C  83 C3	02			 add bx, 2
+    679
+    680	    039F  EB EC				 jmp frameCycleStart
+    681
+    682	    03A1				 endFrameCycle:
+    683
+    684	    03A1  C3				 ret
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 13
 showreg.asm
 
 
 
-    680
-    681	    0396			 printText PROC
-    682
-    683						 ; text	to videomem
-    684	    0396				 cycleStart:
-    685	    0396  8A 24				 mov ah, [si]
+    685	    03A2			 printFrame ENDP
     686
-    687	    0398  3A E6				 cmp ah, dh
-    688	    039A  74 19	90 90			 je endStr
-    689	    039E  3A 26	0000				 cmp ah, NEW_LINE_SYMB
-**Error** showreg.asm(684) Undefined symbol: NEW_LINE_SYMB
-    690	    03A2  74 11	90 90				 je endStr
-    691	    03A6  26: 88 27					 mov byte ptr es:[bx], ah
-    692	    03A9  26: C6 47 01 00				 mov byte ptr es:[bx+1], TEXT_COLOR
-**Error** showreg.asm(687) Undefined symbol: TEXT_COLOR
-    693
-    694	    03AE  46						 inc si
-    695	    03AF  83 C3	02					 add bx, 2
-    696
-    697	    03B2  49						 dec cx
-    698	    03B3  EB E1				 jmp cycleStart
-    699
-    700	    03B5				 endStr:
+    687					 ;-----------------------------------------------------------------------
+    688					 ; puts	string to videoMem
+    689					 ; Entry: Entry: si = pointer to the begin of str
+    690					 ; Exit:  cx = amountNotFilledSpace
+    691					 ; Exp:	  dh = ensStr symbol ASCII code
+    692					 ;
+    693					 ; Destr: ah, si, bx, cx
+    694					 ;-----------------------------------------------------------------------
+    695
+    696	    03A2			 printText PROC
+    697
+    698						 ; text	to videomem
+    699	    03A2				 cycleStart:
+    700	    03A2  8A 24				 mov ah, [si]
     701
-    702	    03B5  C3				 ret
-    703	    03B6			 printText ENDP
-    704
-    705					 ;-----------------------------------------------------------------------
-    706					 ; counts max line len
-    707					 ; Entry: si = pointer to the begin of str
-    708					 ; Exit:  cx = max length line
-    709					 ;		  al = amount lines
-    710					 ; Exp:	  dh = ensStr symbol ASCII code
-    711					 ; Destr: ax, cx, di, si
-    712					 ;-----------------------------------------------------------------------
-    713
-    714	    03B6			 countLineMaxLen PROC
-    715	    03B6  53				 push bx
-    716	    03B7  52				 push dx
-    717	    03B8  33 DB				 xor bx, bx
-    718
-    719	    03BA  8A 36	0000			 mov dh, NEW_LINE_SYMB
-**Error** showreg.asm(714) Undefined symbol: NEW_LINE_SYMB
-    720	    03BE				 ??cycleStart:
-    721
-    722	    03BE  E8 0020			 call strlen
-    723	    03C1  8B F7				 mov si, di
-    724
-    725	    03C3  3B D9				 cmp bx, cx
-    726	    03C5  7F 04	90 90			 jg ??notGreaterLine
-    727	    03C9  8B D9					 mov bx, cx
-    728	    03CB				 ??notGreaterLine:
-    729
-    730	    03CB  FE C0				 inc al
-    731
-    732	    03CD  8A 14				 mov dl, [si]
-    733	    03CF  3A 16	0000			 cmp dl, END_STR_INPUT_SYMB
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 14
+    702	    03A4  3A E6				 cmp ah, dh
+    703	    03A6  74 18	90 90			 je endStr
+    704	    03AA  80 FC	23				 cmp ah, NEW_LINE_SYMB
+    705	    03AD  74 11	90 90				 je endStr
+    706	    03B1  26: 88 27					 mov byte ptr es:[bx], ah
+    707	    03B4  26: C6 47 01 5E				 mov byte ptr es:[bx+1], TEXT_COLOR
+    708
+    709	    03B9  46						 inc si
+    710	    03BA  83 C3	02					 add bx, 2
+    711
+    712	    03BD  49						 dec cx
+    713	    03BE  EB E2				 jmp cycleStart
+    714
+    715	    03C0				 endStr:
+    716
+    717	    03C0  C3				 ret
+    718	    03C1			 printText ENDP
+    719
+    720					 ;-----------------------------------------------------------------------
+    721					 ; counts max line len
+    722					 ; Entry: si = pointer to the begin of str
+    723					 ; Exit:  cx = max length line
+    724					 ;		  al = amount lines
+    725					 ; Exp:	  dh = ensStr symbol ASCII code
+    726					 ; Destr: ax, cx, di, si
+    727					 ;-----------------------------------------------------------------------
+    728
+    729	    03C1			 countLineMaxLen PROC
+    730	    03C1  53				 push bx
+    731	    03C2  52				 push dx
+    732	    03C3  33 DB				 xor bx, bx
+    733
+    734	    03C5  B6 23				 mov dh, NEW_LINE_SYMB
+    735	    03C7				 ??cycleStart:
+    736
+    737	    03C7  E8 001F			 call strlen
+    738	    03CA  8B F7				 mov si, di
+    739
+    740	    03CC  3B D9				 cmp bx, cx
+    741	    03CE  7F 04	90 90			 jg ??notGreaterLine
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 14
 showreg.asm
 
 
 
-**Error** showreg.asm(728) Undefined symbol: END_STR_INPUT_SYMB
-    734	    03D3  74 05	90 90			 je ??cycleEnd
-    735
-    736	    03D7  46				 inc si
-    737	    03D8  EB E4				 jmp ??cycleStart
-    738
-    739	    03DA				 ??cycleEnd:
-    740
-    741	    03DA  32 E4				 xor ah, ah
-    742	    03DC  8B CB				 mov cx, bx
-    743
-    744	    03DE  5A				 pop dx
-    745	    03DF  5B				 pop bx
-    746	    03E0  C3				 ret
-    747	    03E1			 countLineMaxLen ENDP
-    748
-    749					 ;-----------------------------------------------------------------------
-    750					 ; counts amount of symbols in str with	endStr symbol '$'
-    751					 ; Entry: si = pointer to the begin of str
-    752					 ; Exit:  cx = length str
-    753					 ; Exp:	  dh = ensStr symbol ASCII code
-    754					 ; Destr: ah, cx, di
-    755					 ;-----------------------------------------------------------------------
-    756
-    757	    03E1			 strlen	PROC
-    758	    03E1  8B FE				 mov di, si
-    759	    03E3  33 C9				 xor cx, cx
-    760
-    761	    03E5				 strlenCycle:
-    762	    03E5  8A 25				 mov ah, [di]
+    742	    03D2  8B D9					 mov bx, cx
+    743	    03D4				 ??notGreaterLine:
+    744
+    745	    03D4  FE C0				 inc al
+    746
+    747	    03D6  8A 14				 mov dl, [si]
+    748	    03D8  80 FA	24			 cmp dl, END_STR_INPUT_SYMB
+    749	    03DB  74 05	90 90			 je ??cycleEnd
+    750
+    751	    03DF  46				 inc si
+    752	    03E0  EB E5				 jmp ??cycleStart
+    753
+    754	    03E2				 ??cycleEnd:
+    755
+    756	    03E2  32 E4				 xor ah, ah
+    757	    03E4  8B CB				 mov cx, bx
+    758
+    759	    03E6  5A				 pop dx
+    760	    03E7  5B				 pop bx
+    761	    03E8  C3				 ret
+    762	    03E9			 countLineMaxLen ENDP
     763
-    764	    03E7  3A E6				 cmp ah, dh
-    765	    03E9  74 0E	90 90			 je strlenEnd
-    766	    03ED  3A 26	0000			 cmp ah, END_STR_INPUT_SYMB
-**Error** showreg.asm(761) Undefined symbol: END_STR_INPUT_SYMB
-    767	    03F1  74 06	90 90			 je strlenEnd
-    768	    03F5  47				 inc di
-    769
-    770	    03F6  41				 inc cx	   ; increment symbols counter
-    771	    03F7  EB EC				 jmp strlenCycle
-    772	    03F9				 strlenEnd:
-    773	    03F9  C3				 ret
-    774	    03FA			 strlen	ENDP
+    764					 ;-----------------------------------------------------------------------
+    765					 ; counts amount of symbols in str with	endStr symbol '$'
+    766					 ; Entry: si = pointer to the begin of str
+    767					 ; Exit:  cx = length str
+    768					 ; Exp:	  dh = ensStr symbol ASCII code
+    769					 ; Destr: ah, cx, di
+    770					 ;-----------------------------------------------------------------------
+    771
+    772	    03E9			 strlen	PROC
+    773	    03E9  8B FE				 mov di, si
+    774	    03EB  33 C9				 xor cx, cx
     775
-    776					 ;-----------------------------------------------------------------------
-    777					 ; puts	symbol in video	memory and moves to next cell for symbol
-    778					 ; Entry: dl	  = symbol of frame
-    779					 ;		  es:[bx] = addr where to put symbol
-    780					 ; Exit:  nop
-    781					 ; Exp:	  es:[bx] = point to appropriate memCell
-    782					 ; Destr: bx
-    783					 ;-----------------------------------------------------------------------
+    776	    03ED				 strlenCycle:
+    777	    03ED  8A 25				 mov ah, [di]
+    778
+    779	    03EF  3A E6				 cmp ah, dh
+    780	    03F1  74 0D	90 90			 je strlenEnd
+    781	    03F5  80 FC	24			 cmp ah, END_STR_INPUT_SYMB
+    782	    03F8  74 06	90 90			 je strlenEnd
+    783	    03FC  47				 inc di
     784
-    785	    03FA			 outSymbol PROC
-    786	    03FA  26: 88 17			 mov byte ptr es:[bx], dl
-    787	    03FD  26: C6 47 01 00		 mov byte ptr es:[bx + 1], COLOR
-**Error** showreg.asm(782) Undefined symbol: COLOR
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 15
+    785	    03FD  41				 inc cx	   ; increment symbols counter
+    786	    03FE  EB ED				 jmp strlenCycle
+    787	    0400				 strlenEnd:
+    788	    0400  C3				 ret
+    789	    0401			 strlen	ENDP
+    790
+    791					 ;-----------------------------------------------------------------------
+    792					 ; puts	symbol in video	memory and moves to next cell for symbol
+    793					 ; Entry: dl	  = symbol of frame
+    794					 ;		  es:[bx] = addr where to put symbol
+    795					 ; Exit:  nop
+    796					 ; Exp:	  es:[bx] = point to appropriate memCell
+    797					 ; Destr: bx
+    798					 ;-----------------------------------------------------------------------
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 15
 showreg.asm
 
 
 
-    788	    0402  83 C3	02			 add bx, 2
-    789
-    790	    0405  C3				 ret
-    791	    0406			 outSymbol ENDP
-    792
-    793					 ;-----------------------------------------------------------------------
-    794					 ; returns bx to the start position
-    795					 ; Entry: di = amount of extra symbols except from text	symbols
-    796					 ; Exit:  nop
-    797					 ; Exp:	  nop
-    798					 ; Destr: ax, bx
-    799					 ;-----------------------------------------------------------------------
-    800
-    801	    0406			 videoMemPointerMoveBack PROC
-    802	    0406  8B C1				 mov ax, cx
-    803	    0408  03 C7				 add ax, di
-    804	    040A  03 C0				 add ax, ax
-    805
-    806	    040C  2B D8				 sub bx, ax
+    799
+    800	    0401			 outSymbol PROC
+    801	    0401  26: 88 17			 mov byte ptr es:[bx], dl
+    802	    0404  26: C6 47 01 0D		 mov byte ptr es:[bx + 1], COLOR
+    803	    0409  83 C3	02			 add bx, 2
+    804
+    805	    040C  C3				 ret
+    806	    040D			 outSymbol ENDP
     807
-    808	    040E  C3				 ret
-    809	    040F			 videoMemPointerMoveBack ENDP
-    810
-    811					 ;-----------------------------------------------------------------------
-    812					 ; Alining frame for it	to be in the center of screen
-    813					 ; Entry: ax = width of	frame in symbols
-    814					 ; Exit:  bx = points at the left side of frame
-    815					 ; Exp:	  bx = points in the center of some string
-    816					 ; Destr: ax, bx
-    817					 ;-----------------------------------------------------------------------
-    818
-    819	    040F			 alignFrame PROC
-    820	    040F  3D 0002			 cmp ax, 2d
-    821	    0412  75 05	90 90			 jne notTwoCase
-    822	    0416  2B D8					 sub bx, ax
-    823	    0418  C3					 ret
-    824	    0419				 notTwoCase:
-    825	    0419  C1 E8	02			 shr ax, 2
-    826	    041C  D1 E0				 shl ax, 1
-    827	    041E  2B D8				 sub bx, ax
-    828	    0420  C3				 ret
-    829	    0421			 alignFrame ENDP
-    830
-    831					 ;-----------------------------------------------------------------------
-    832					 ; Making delay	for correct displaying of the animation
-    833					 ; Entry: cx = amount of tacts to skip
-    834					 ; Exit:  nop
-    835					 ; Exp:	  nop
-    836					 ; Destr: cx
-    837					 ;-----------------------------------------------------------------------
-    838
-    839	    0421			 delayForAnimation PROC
-    840	    0421				 delay:
-    841	    0421  90					 nop
-    842	    0422  E2 FD					 loop delay
-    843	    0424  C3				 ret
-    844	    0425			 delayForAnimation ENDP
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 16
+    808					 ;-----------------------------------------------------------------------
+    809					 ; returns bx to the start position
+    810					 ; Entry: di = amount of extra symbols except from text	symbols
+    811					 ; Exit:  nop
+    812					 ; Exp:	  nop
+    813					 ; Destr: ax, bx
+    814					 ;-----------------------------------------------------------------------
+    815
+    816	    040D			 videoMemPointerMoveBack PROC
+    817	    040D  8B C1				 mov ax, cx
+    818	    040F  03 C7				 add ax, di
+    819	    0411  03 C0				 add ax, ax
+    820
+    821	    0413  2B D8				 sub bx, ax
+    822
+    823	    0415  C3				 ret
+    824	    0416			 videoMemPointerMoveBack ENDP
+    825
+    826					 ;-----------------------------------------------------------------------
+    827					 ; Alining frame for it	to be in the center of screen
+    828					 ; Entry: ax = width of	frame in symbols
+    829					 ; Exit:  bx = points at the left side of frame
+    830					 ; Exp:	  bx = points in the center of some string
+    831					 ; Destr: ax, bx
+    832					 ;-----------------------------------------------------------------------
+    833
+    834	    0416			 alignFrame PROC
+    835	    0416  3D 0002			 cmp ax, 2d
+    836	    0419  75 05	90 90			 jne notTwoCase
+    837	    041D  2B D8					 sub bx, ax
+    838	    041F  C3					 ret
+    839	    0420				 notTwoCase:
+    840	    0420  C1 E8	02			 shr ax, 2
+    841	    0423  D1 E0				 shl ax, 1
+    842	    0425  2B D8				 sub bx, ax
+    843	    0427  C3				 ret
+    844	    0428			 alignFrame ENDP
+    845
+    846					 ;-----------------------------------------------------------------------
+    847					 ; Making delay	for correct displaying of the animation
+    848					 ; Entry: cx = amount of tacts to skip
+    849					 ; Exit:  nop
+    850					 ; Exp:	  nop
+    851					 ; Destr: cx
+    852					 ;-----------------------------------------------------------------------
+    853
+    854	    0428			 delayForAnimation PROC
+    855	    0428				 delay:
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 16
 showreg.asm
 
 
 
-    845
-    846
-    847
-    848
-    849
-    850					 ;-----------------------------------------------------------------
-    851					 ; Part	to put residental programm in memory
-    852					 ;-----------------------------------------------------------------
-    853
-    854	    0425			 nonResident:
-    855	    0425  E8 0008		     call addOldIntHandlerJmp
-    856
-    857	    0428  E8 0015		     call replaceInt09Handler
-    858
-    859	    042B  CD 09			     int 09h
+    856	    0428  90					 nop
+    857	    0429  E2 FD					 loop delay
+    858	    042B  C3				 ret
+    859	    042C			 delayForAnimation ENDP
     860
-    861	    042D  E8 0024		     call keepProgAsResident
+    861
     862
-    863	    0430			 addOldIntHandlerJmp PROC
-    864	    0430  6A 00			     push 0
-    865	    0432  1F			     pop ds
-    866	    0433  BE 0024		     mov si, 4 * 09h
-    867	    0436  8C C8			     mov ax, cs
-    868	    0438  8E C0			     mov es, ax
-    869	    043A  BF 0133r		     mov di, offset OLD_INT09_HANDLER
-    870	    043D  66| A5		     movsd
+    863
+    864
+    865					 ;-----------------------------------------------------------------
+    866					 ; Part	to put residental programm in memory
+    867					 ;-----------------------------------------------------------------
+    868
+    869	    042C			 nonResident:
+    870	    042C  E8 0008		     call addOldIntHandlerJmp
     871
-    872	    043F  C3			     ret
-    873	    0440			 addOldIntHandlerJmp ENDP
-    874
-    875	    0440			 replaceInt09Handler PROC
-    876	    0440  6A 00			     push 0
-    877	    0442  07			     pop es
-    878	    0443  BB 0024		     mov bx, 4 * 09h
-    879	    0446  FA			     cli
-    880	    0447  26: C7 07 010Dr	     mov word ptr es:[bx], offset keyboardInt
-    881
-    882	    044C  8C C8			     mov ax, cs
-    883	    044E  26: 89 47 02		     mov word ptr es:[bx + 2], ax
-    884	    0452  FB			     sti
-    885
-    886	    0453  C3			     ret
-    887	    0454			 replaceInt09Handler ENDP
-    888
-    889	    0454			 keepProgAsResident PROC
-    890	    0454  B8 3100		     mov ax, 3100h
-    891	    0457  BA 0425r		     mov dx, offset nonResident
-    892	    045A  C1 EA	04		     shr dx, 4
-    893	    045D  42			     inc dx
-    894	    045E  CD 21			     int 21h
-    895
-    896	    0460  C3			     ret
-    897	    0461			 keepProgAsResident ENDP
-    898
-    899					 end Start
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 17
+    872	    042F  E8 0015		     call replaceInt09Handler
+    873
+    874	    0432  CD 09			     int 09h
+    875
+    876	    0434  E8 0024		     call keepProgAsResident
+    877
+    878	    0437			 addOldIntHandlerJmp PROC
+    879	    0437  6A 00			     push 0
+    880	    0439  1F			     pop ds
+    881	    043A  BE 0024		     mov si, 4 * 09h
+    882	    043D  8C C8			     mov ax, cs
+    883	    043F  8E C0			     mov es, ax
+    884	    0441  BF 0133r		     mov di, offset OLD_INT09_HANDLER
+    885	    0444  66| A5		     movsd
+    886
+    887	    0446  C3			     ret
+    888	    0447			 addOldIntHandlerJmp ENDP
+    889
+    890	    0447			 replaceInt09Handler PROC
+    891	    0447  6A 00			     push 0
+    892	    0449  07			     pop es
+    893	    044A  BB 0024		     mov bx, 4 * 09h
+    894	    044D  FA			     cli
+    895	    044E  26: C7 07 010Dr	     mov word ptr es:[bx], offset keyboardInt
+    896
+    897	    0453  8C C8			     mov ax, cs
+    898	    0455  26: 89 47 02		     mov word ptr es:[bx + 2], ax
+    899	    0459  FB			     sti
+    900
+    901	    045A  C3			     ret
+    902	    045B			 replaceInt09Handler ENDP
+    903
+    904	    045B			 keepProgAsResident PROC
+    905	    045B  B8 3100		     mov ax, 3100h
+    906	    045E  BA 042Cr		     mov dx, offset nonResident
+    907	    0461  C1 EA	04		     shr dx, 4
+    908	    0464  42			     inc dx
+    909	    0465  CD 21			     int 21h
+    910
+    911	    0467  C3			     ret
+    912	    0468			 keepProgAsResident ENDP
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 17
+showreg.asm
+
+
+
+    913
+    914					 end Start
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 18
 Symbol Table
 
 
@@ -996,26 +1005,27 @@ Symbol Table
 
 Symbol Name			  Type	 Value
 
-??BEGINFILLFREESPACE		  Near	 DGROUP:0329
-??CYCLEEND			  Near	 DGROUP:03DA
-??CYCLESTART			  Near	 DGROUP:03BE
+??BEGINFILLFREESPACE		  Near	 DGROUP:0333
+??CYCLEEND			  Near	 DGROUP:03E2
+??CYCLESTART			  Near	 DGROUP:03C7
 ??DATE				  Text	 "02/21/26"
-??END				  Near	 DGROUP:01D4
-??ENDCYCLE			  Near	 DGROUP:017D
-??ENDDRAWINGCYCLE		  Near	 DGROUP:01BB
-??ENDEDFILLFREESPACE		  Near	 DGROUP:0336
+??END				  Near	 DGROUP:01DD
+??ENDCYCLE			  Near	 DGROUP:0181
+??ENDDRAWINGCYCLE		  Near	 DGROUP:01C4
+??ENDEDFILLFREESPACE		  Near	 DGROUP:0340
+??ENDFIND			  Near	 DGROUP:0387
 ??FILENAME			  Text	 "showreg "
-??G9				  Near	 DGROUP:01D1
-??IS_ODD			  Near	 DGROUP:0265
-??NOTGREATERLINE		  Near	 DGROUP:03CB
-??NOTNEEDEDSC			  Near	 DGROUP:014F
-??NOTSP				  Near	 DGROUP:0170
-??NOT_ODD			  Near	 DGROUP:0262
-??PRINTEDSTR			  Near	 DGROUP:02C7
-??STARTCYCLE			  Near	 DGROUP:0159
-??STARTDRAWINGCYCLE		  Near	 DGROUP:0193
-??TEXTPRINTCYCLE		  Near	 DGROUP:02A9
-??TIME				  Text	 "20:05:02"
+??G9				  Near	 DGROUP:01DA
+??IS_ODD			  Near	 DGROUP:026C
+??NOTGREATERLINE		  Near	 DGROUP:03D4
+??NOTNEEDEDSC			  Near	 DGROUP:0153
+??NOTSP				  Near	 DGROUP:0174
+??NOT_ODD			  Near	 DGROUP:0269
+??PRINTEDSTR			  Near	 DGROUP:02CD
+??STARTCYCLE			  Near	 DGROUP:015D
+??STARTDRAWINGCYCLE		  Near	 DGROUP:019C
+??TEXTPRINTCYCLE		  Near	 DGROUP:02AF
+??TIME				  Text	 "21:27:02"
 ??VERSION			  Number 040A
 @32BIT				  Text	 0
 @CODE				  Text	 DGROUP
@@ -1029,99 +1039,95 @@ Symbol Name			  Type	 Value
 @MODEL				  Text	 1
 @STACK				  Text	 DGROUP
 @WORDSIZE			  Text	 4
-ADDOLDINTHANDLERJMP		  Near	 DGROUP:0430
-ALIGNFRAME			  Near	 DGROUP:040F
+ADDOLDINTHANDLERJMP		  Near	 DGROUP:0437
+ALIGNFRAME			  Near	 DGROUP:0416
 AMOUNT_NIBBLES_REGISTER		  Number 0004
 AMOUNT_REGS_DUMP		  Number 000D
-ANIMATIONDRAWFRAME		  Near	 DGROUP:0266
-ANIMATIONDRAWFRAMELINES		  Near	 DGROUP:027B
-ANIMATIONDRAWSINGLELINE		  Near	 DGROUP:0290
-ANIMATIONDRAWTEXT		  Near	 DGROUP:030F
-ANIMATIONMODE			  Near	 DGROUP:0223
-CALCSTARTSTEP			  Near	 DGROUP:0252
-CONVERTNIBBLETOASCII		  Near	 DGROUP:01C4
-COUNTLINEMAXLEN			  Near	 DGROUP:03B6
-COUNTTEXTSTARTLINE		  Near	 DGROUP:0305
-CYCLESTART			  Near	 DGROUP:0396
-DELAY				  Near	 DGROUP:0421
-DELAYFORANIMATION		  Near	 DGROUP:0421
+ANIMATIONDRAWFRAME		  Near	 DGROUP:026D
+ANIMATIONDRAWFRAMELINES		  Near	 DGROUP:0282
+ANIMATIONDRAWSINGLELINE		  Near	 DGROUP:0297
+ANIMATIONDRAWTEXT		  Near	 DGROUP:0318
+ANIMATIONMODE			  Near	 DGROUP:022C
+CALCSTARTSTEP			  Near	 DGROUP:0259
+COLOR				  Number 000D
+CONVERTNIBBLETOASCII		  Near	 DGROUP:01CD
+COUNTLINEMAXLEN			  Near	 DGROUP:03C1
+COUNTTEXTSTARTLINE		  Near	 DGROUP:030E
+CYCLESTART			  Near	 DGROUP:03A2
+DELAY				  Near	 DGROUP:0428
+DELAYFORANIMATION		  Near	 DGROUP:0428
 DIFFERENCE_NUM_ASCII_G9		  Number 0037
 DIFFERENCE_NUM_ASCII_L9		  Number 0030
-DONE				  Near	 DGROUP:028F
-DRAWALLREGS			  Near	 DGROUP:0150
-DRAWREG				  Near	 DGROUP:0183
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 18
+DONE				  Near	 DGROUP:0296
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 19
 Symbol Table
 
 
 
-ENDANIMATIONCYCLE		  Near	 DGROUP:0242
-ENDFRAMECYCLE			  Near	 DGROUP:0395
-ENDFRAMELINE			  Near	 DGROUP:02FF
-ENDSTR				  Near	 DGROUP:03B5
+DRAWALLREGS			  Near	 DGROUP:0154
+DRAWREG				  Near	 DGROUP:018C
+ENDANIMATIONCYCLE		  Near	 DGROUP:024A
+ENDFRAMECYCLE			  Near	 DGROUP:03A1
+ENDFRAMELINE			  Near	 DGROUP:0307
+ENDSTR				  Near	 DGROUP:03C0
+END_STR_INPUT_SYMB		  Number 0024
 EOI				  Number 0020
-FINDSYMFORSTR			  Near	 DGROUP:035F
-FRAMECYCLESTART			  Near	 DGROUP:0381
-FRAMEDRAWINGPART		  Near	 DGROUP:0213
+FINDSYMFORSTR			  Near	 DGROUP:036B
+FRAMECYCLESTART			  Near	 DGROUP:038D
+FRAMEDRAWINGPART		  Near	 DGROUP:021C
 FRAMESYMBOLSSTR			  Byte	 DGROUP:0103
 FRAME_INIT_LEN_ADDR		  Number 0080
-GETANIMATIONITERATIONSCOUNT	  Near	 DGROUP:033E
+GETANIMATIONITERATIONSCOUNT	  Near	 DGROUP:0348
 HANDLESCANCODE			  Near	 DGROUP:0141
-INITANIMATION			  Near	 DGROUP:0243
-KEEPPROGASRESIDENT		  Near	 DGROUP:0454
+INITANIMATION			  Near	 DGROUP:024B
+KEEPPROGASRESIDENT		  Near	 DGROUP:045B
 KEYBOARDINT			  Near	 DGROUP:010D
 KEYBOARDINTPREAMBLE		  Near	 DGROUP:0137
 LENGTH_VIDEO_MEM_LINE		  Number 0050
-LINELOOP			  Near	 DGROUP:0282
-MOVEBASETONEXTLINESTARTPOS	  Near	 DGROUP:02E6
-MOVETONEXTLINEVIDEOMEM		  Near	 DGROUP:017E
-NONRESIDENT			  Near	 DGROUP:0425
-NOTFIRST			  Near	 DGROUP:036A
-NOTLAST				  Near	 DGROUP:0378
-NOTTEXTSTR2			  Near	 DGROUP:02CA
-NOTTWOCASE			  Near	 DGROUP:0419
+LINELOOP			  Near	 DGROUP:0289
+MODE_ONE_SYMB			  Number 0003
+MODE_TWO_SYMB			  Number 0005
+MOVEBASETONEXTLINESTARTPOS	  Near	 DGROUP:02ED
+MOVETONEXTLINEVIDEOMEM		  Near	 DGROUP:0187
+NEW_LINE_SYMB			  Number 0023
+NONRESIDENT			  Near	 DGROUP:042C
+NOTFIRST			  Near	 DGROUP:0376
+NOTLAST				  Near	 DGROUP:0384
+NOTTEXTSTR2			  Near	 DGROUP:02D0
+NOTTWOCASE			  Near	 DGROUP:0420
+NO_MODE_SYMB			  Number 0004
 OLD_INT09_HANDLER		  Near	 DGROUP:0133
-OUTSYMBOL			  Near	 DGROUP:03FA
-PRINTCOMPMODESTRPOSTAMBLE	  Near	 DGROUP:0352
-PRINTCOMPMODESTRPREAMBLE	  Near	 DGROUP:0345
-PRINTFRAME			  Near	 DGROUP:037E
-PRINTTEXT			  Near	 DGROUP:0396
-PUTINMEMFRAMEPARAMS		  Near	 DGROUP:01D5
-REPLACEINT09HANDLER		  Near	 DGROUP:0440
-RESETCONTROLLERS		  Near	 DGROUP:0204
+OUTSYMBOL			  Near	 DGROUP:0401
+PRINTCOMPMODESTRPOSTAMBLE	  Near	 DGROUP:035D
+PRINTCOMPMODESTRPREAMBLE	  Near	 DGROUP:034F
+PRINTFRAME			  Near	 DGROUP:038A
+PRINTTEXT			  Near	 DGROUP:03A2
+PUTINMEMFRAMEPARAMS		  Near	 DGROUP:01DE
+REPLACEINT09HANDLER		  Near	 DGROUP:0447
+RESETCONTROLLERS		  Near	 DGROUP:020D
 SCAN_CODE_COLOR			  Number 004E
 SHOW_REG_BUTTON_SCAN_CODE	  Number 0029
 START				  Near	 DGROUP:0100
-STARTANIMATIONCYCLE		  Near	 DGROUP:0229
-STARTFRAMELINE			  Near	 DGROUP:02F3
-STRLEN				  Near	 DGROUP:03E1
-STRLENCYCLE			  Near	 DGROUP:03E5
-STRLENEND			  Near	 DGROUP:03F9
-VIDEOMEMPOINTERMOVEBACK		  Near	 DGROUP:0406
+STARTANIMATIONCYCLE		  Near	 DGROUP:0232
+STARTFRAMELINE			  Near	 DGROUP:02FA
+STRLEN				  Near	 DGROUP:03E9
+STRLENCYCLE			  Near	 DGROUP:03ED
+STRLENEND			  Near	 DGROUP:0400
+TEXT_COLOR			  Number 005E
+VIDEOMEMPOINTERMOVEBACK		  Near	 DGROUP:040D
 VIDEO_MEM_START_ADDR		  Number B800
 _FRAME_MODE_ADDR		  Number 0082
 _FRAME_SYMBOLS_START_ADDR	  Number 0084
 _FRAME_TEXT_ADDR		  Number 008E
+Turbo Assembler	 Version 4.1	    02/21/26 21:27:02	    Page 20
+Symbol Table
+
+
+
 
 Groups & Segments		  Bit Size Align  Combine Class
 
 DGROUP				  Group
   _DATA				  16  0000 Word	  Public  DATA
-  _TEXT				  16  0461 Word	  Public  CODE
-Turbo Assembler	 Version 4.1	    02/21/26 20:05:02	    Page 19
-Error Summary
-
-
-
-**Error** showreg.asm(323) Undefined symbol: FRAME_SYM_START_ADDR
-**Error** showreg.asm(340) Undefined symbol: TEXT_START_ADDR
-**Error** showreg.asm(410) Undefined symbol: TEXT_START_ADDR
-**Error** showreg.asm(632) Symbol already defined elsewhere: ??END
-**Error** showreg.asm(655) Undefined symbol: COLOR
-**Error** showreg.asm(684) Undefined symbol: NEW_LINE_SYMB
-**Error** showreg.asm(687) Undefined symbol: TEXT_COLOR
-**Error** showreg.asm(714) Undefined symbol: NEW_LINE_SYMB
-**Error** showreg.asm(728) Undefined symbol: END_STR_INPUT_SYMB
-**Error** showreg.asm(761) Undefined symbol: END_STR_INPUT_SYMB
-**Error** showreg.asm(782) Undefined symbol: COLOR
+  _TEXT				  16  0468 Word	  Public  CODE
 
