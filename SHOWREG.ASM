@@ -14,6 +14,8 @@ SHOW_REG_BUTTON_SCAN_CODE equ 29h
 DIFFERENCE_NUM_ASCII_L9   equ 48d
 DIFFERENCE_NUM_ASCII_G9   equ 55d
 
+AMOUNT_NIBBLES_REGISTER   equ 4d
+AMOUNT_REGS_DUMP          equ 13d
 
 Start: jmp nonResident
 
@@ -31,14 +33,22 @@ Start: jmp nonResident
 ;-----------------------------------------------------------------------
 
 keyboardInt PROC
-    push ax bx es
+    push sp bp ss es ds di si dx cx bx ax
+    
+
+    push bp
+    mov bp, sp 
+
     call keyboardIntPreamble
 
     call handleScanCode
 
     call resetControllers
 
-    pop es bx ax
+    mov sp, bp
+    pop bp
+
+    pop ax bx cx dx si di ds es ss bp sp
     db 0eah
 OLD_INT09_HANDLER: dd 0
 
@@ -77,20 +87,52 @@ handleScanCode PROC
 
     cmp al, SHOW_REG_BUTTON_SCAN_CODE
     jne ??notNeededSC
-        mov es:[bx], ax
 
-        push di
-        call drawReg
-        add sp, 2h
+        call drawAllRegs
+
     ??notNeededSC:
 
     ret
 handleScanCode ENDP
 
+drawAllRegs PROC
+    mov bx, (LENGTH_VIDEO_MEM_LINE * 5d + LENGTH_VIDEO_MEM_LINE / 2) * 2
+
+    mov cx, 1d 
+
+    ??StartCycle:
+    cmp cx, AMOUNT_REGS_DUMP + 1d 
+    jge ??endCycle 
+        mov si, cx
+        shl si, 1          ; si = cx * 2
+        mov di, [bp + si] 
+
+        ; amendment for sp reg case
+        cmp cx, AMOUNT_REGS_DUMP
+        jne ??notSp 
+            sub di, 6d  ; take into consid pushf, push cs, push ip
+        ??notSp:
+
+        call drawReg
+
+        call moveToNextLineVideoMem
+
+        inc cx
+        jmp ??StartCycle
+    ??endCycle:
+
+    ret
+drawAllRegs ENDP
+
+moveToNextLineVideoMem PROC
+	add bx, LENGTH_VIDEO_MEM_LINE * 2d  ; move to next line
+    ret 
+moveToNextLineVideoMem ENDP
+
 ; CDECL
 ;-----------------------------------------------------------------------
 ; new Function performed on int 09h draw regs values on '`' button press
-; Entry: [bp - 4] = reg value to draw 
+; Entry: di = reg value to draw 
 ; Exit:  no
 ; Exp:   no
 ; Destr: no
@@ -109,12 +151,11 @@ drawReg PROC
     xor dx,dx 
     mov dx, 0f000h   ; mask for reg nibble 
 
-    mov bx, (LENGTH_VIDEO_MEM_LINE * 5d + LENGTH_VIDEO_MEM_LINE / 2) * 2
     
     ??startDrawingCycle:
     cmp cx, 5d
     jge ??endDrawingCycle
-        mov ax, ss:[bp + 04h]
+        mov ax, di
         and ax, dx
 
         mov si, 4d
@@ -205,11 +246,7 @@ resetControllers ENDP
 nonResident:
     call addOldIntHandlerJmp
 
-    call replaceInt09Handler
-    
-    
-
-    int 09h
+    call replaceInt09Handler 
 
     call keepProgAsResident
 

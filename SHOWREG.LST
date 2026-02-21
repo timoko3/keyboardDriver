@@ -1,4 +1,4 @@
-Turbo Assembler	 Version 4.1	    02/21/26 00:06:51	    Page 1
+Turbo Assembler	 Version 4.1	    02/21/26 18:09:32	    Page 1
 showreg.asm
 
 
@@ -19,291 +19,309 @@ showreg.asm
      14		  =0030			 DIFFERENCE_NUM_ASCII_L9   equ 48d
      15		  =0037			 DIFFERENCE_NUM_ASCII_G9   equ 55d
      16
-     17
-     18	    0100  E9 00A5		 Start:	jmp nonResident
+     17		  =0004			 AMOUNT_NIBBLES_REGISTER   equ 4d
+     18		  =000D			 AMOUNT_REGS_DUMP	   equ 13d
      19
-     20					 ; --------------------------------------------------------------------------
-     21					 ; new int 09 handler part
+     20	    0100  E9 00D4		 Start:	jmp nonResident
+     21
      22					 ; --------------------------------------------------------------------------
-     23
-     24
-     25					 ;-----------------------------------------------------------------------
-     26					 ; new Function	performed on int 09h draw regs values on '`' button press
-     27					 ; Entry: no
-     28					 ; Exit:  no
-     29					 ; Exp:	  no
-     30					 ; Destr: no
-     31					 ;-----------------------------------------------------------------------
-     32
-     33	    0103			 keyboardInt PROC
-     34	    0103  58			     pop ax
-     35	    0104  5B			     pop bx
-     36	    0105  59			     pop cx
-     37
-     38	    0106  51			     push cx
-     39	    0107  53			     push bx
-     40	    0108  50			     push ax
-     41
-     42	    0109  68 B800		     push VIDEO_MEM_START_ADDR
-     43	    010C  07			     pop es
-     44	    010D  BB 0370		     mov bx, (LENGTH_VIDEO_MEM_LINE * 5d + LENGTH_VIDEO_MEM_LINE / 2) *	2
-     45
-     46	    0110  26: 89 07		     mov es:[bx], ax
-     47
+     23					 ; new int 09 handler part
+     24					 ; --------------------------------------------------------------------------
+     25
+     26
+     27					 ;-----------------------------------------------------------------------
+     28					 ; new Function	performed on int 09h draw regs values on '`' button press
+     29					 ; Entry: no
+     30					 ; Exit:  no
+     31					 ; Exp:	  no
+     32					 ; Destr: no
+     33					 ;-----------------------------------------------------------------------
+     34
+     35	    0103			 keyboardInt PROC
+     36	    0103  54 55	16 06 1E 57 56+	     push sp bp	ss es ds di si dx cx bx	ax
+     37		  52 51	53 50
+     38
+     39
+     40	    010E  55			     push bp
+     41	    010F  8B EC			     mov bp, sp
+     42
+     43	    0111  E8 0019		     call keyboardIntPreamble
+     44
+     45	    0114  E8 0020		     call handleScanCode
+     46
+     47	    0117  E8 00AE		     call resetControllers
      48
-     49	    0113  50 53	06		     push ax bx	es
-     50	    0116  E8 000E		     call keyboardIntPreamble
+     49	    011A  8B E5			     mov sp, bp
+     50	    011C  5D			     pop bp
      51
-     52	    0119  E8 0015		     call handleScanCode
-     53
-     54	    011C  E8 007A		     call resetControllers
-     55
-     56	    011F  07 5B	58		     pop es bx ax
-     57	    0122  EA			     db	0eah
-Turbo Assembler	 Version 4.1	    02/21/26 00:06:51	    Page 2
+     52	    011D  58 5B	59 5A 5E 5F 1F+	     pop ax bx cx dx si	di ds es ss bp sp
+     53		  07 17	5D 5C
+     54	    0128  EA			     db	0eah
+     55	    0129  00000000		 OLD_INT09_HANDLER: dd 0
+     56
+     57	    012D			 keyboardInt ENDP
+Turbo Assembler	 Version 4.1	    02/21/26 18:09:32	    Page 2
 showreg.asm
 
 
 
-     58	    0123  00000000		 OLD_INT09_HANDLER: dd 0
-     59
-     60	    0127			 keyboardInt ENDP
-     61
-     62					 ;-----------------------------------------------------------------------
-     63					 ; preamble of int 09h function
-     64					 ; Entry: no
-     65					 ; Exit:  no
-     66					 ; Exp:	  no
-     67					 ; Destr: es, bx, ah
-     68					 ;-----------------------------------------------------------------------
-     69
-     70	    0127			 keyboardIntPreamble PROC
-     71
-     72	    0127  68 B800		     push VIDEO_MEM_START_ADDR
-     73	    012A  07			     pop es
-     74	    012B  BB 0370		     mov bx, (LENGTH_VIDEO_MEM_LINE * 5d + LENGTH_VIDEO_MEM_LINE / 2) *	2   ; set start	of  +
-     75					 video mem to write to the 5th line center
-     76
-     77	    012E  B4 4E			     mov ah, SCAN_CODE_COLOR  ;set color for scan-code to show
+     58
+     59					 ;-----------------------------------------------------------------------
+     60					 ; preamble of int 09h function
+     61					 ; Entry: no
+     62					 ; Exit:  no
+     63					 ; Exp:	  no
+     64					 ; Destr: es, bx, ah
+     65					 ;-----------------------------------------------------------------------
+     66
+     67	    012D			 keyboardIntPreamble PROC
+     68
+     69	    012D  68 B800		     push VIDEO_MEM_START_ADDR
+     70	    0130  07			     pop es
+     71	    0131  BB 0370		     mov bx, (LENGTH_VIDEO_MEM_LINE * 5d + LENGTH_VIDEO_MEM_LINE / 2) *	2   ; set start	of  +
+     72					 video mem to write to the 5th line center
+     73
+     74	    0134  B4 4E			     mov ah, SCAN_CODE_COLOR  ;set color for scan-code to show
+     75
+     76	    0136  C3			     ret
+     77	    0137			 keyboardIntPreamble ENDP
      78
-     79	    0130  C3			     ret
-     80	    0131			 keyboardIntPreamble ENDP
-     81
-     82					 ;-----------------------------------------------------------------------
-     83					 ; read	info from keyboard port	60h and
-     84					 ; if pressed needed button calls handler
-     85					 ; Entry: no
-     86					 ; Exit:  no
-     87					 ; Exp:	  no
-     88					 ; Destr: al
-     89					 ;-----------------------------------------------------------------------
+     79					 ;-----------------------------------------------------------------------
+     80					 ; read	info from keyboard port	60h and
+     81					 ; if pressed needed button calls handler
+     82					 ; Entry: no
+     83					 ; Exit:  no
+     84					 ; Exp:	  no
+     85					 ; Destr: al
+     86					 ;-----------------------------------------------------------------------
+     87
+     88	    0137			 handleScanCode	PROC
+     89	    0137  E4 60			     in	al, 60h
      90
-     91	    0131			 handleScanCode	PROC
-     92	    0131  E4 60			     in	al, 60h
+     91	    0139  3C 29			     cmp al, SHOW_REG_BUTTON_SCAN_CODE
+     92	    013B  75 05	90 90		     jne ??notNeededSC
      93
-     94	    0133  3C 29			     cmp al, SHOW_REG_BUTTON_SCAN_CODE
-     95	    0135  75 0C	90 90		     jne ??notNeededSC
-     96	    0139  26: 89 07			 mov es:[bx], ax
+     94	    013F  E8 0001			 call drawAllRegs
+     95
+     96	    0142			     ??notNeededSC:
      97
-     98	    013C  57				 push di
-     99	    013D  E8 0004			 call drawReg
-    100	    0140  83 C4	02			 add sp, 2h
-    101	    0143			     ??notNeededSC:
-    102
-    103	    0143  C3			     ret
-    104	    0144			 handleScanCode	ENDP
+     98	    0142  C3			     ret
+     99	    0143			 handleScanCode	ENDP
+    100
+    101	    0143			 drawAllRegs PROC
+    102	    0143  BB 0370		     mov bx, (LENGTH_VIDEO_MEM_LINE * 5d + LENGTH_VIDEO_MEM_LINE / 2) *	2
+    103
+    104	    0146  B9 0001		     mov cx, 1d
     105
-    106					 ; CDECL
-    107					 ;-----------------------------------------------------------------------
-    108					 ; new Function	performed on int 09h draw regs values on '`' button press
-    109					 ; Entry: [bp -	4] = reg value to draw
-    110					 ; Exit:  no
-    111					 ; Exp:	  no
-    112					 ; Destr: no
-    113					 ;-----------------------------------------------------------------------
-    114
-Turbo Assembler	 Version 4.1	    02/21/26 00:06:51	    Page 3
+    106	    0149			     ??StartCycle:
+    107	    0149  83 F9	0E		     cmp cx, AMOUNT_REGS_DUMP +	1d
+    108	    014C  7D 1B	90 90		     jge ??endCycle
+    109	    0150  8B F1				 mov si, cx
+    110	    0152  D1 E6				 shl si, 1	    ; si = cx *	2
+    111	    0154  8B 3A				 mov di, [bp + si]
+    112
+    113						 ; amendment for sp reg	case
+    114	    0156  83 F9	0D			 cmp cx, AMOUNT_REGS_DUMP
+Turbo Assembler	 Version 4.1	    02/21/26 18:09:32	    Page 3
 showreg.asm
 
 
 
-    115	    0144			 drawReg PROC
-    116	    0144  55			     push bp
-    117	    0145  8B EC			     mov bp, sp
+    115	    0159  75 05	90 90			 jne ??notSp
+    116	    015D  83 EF	06			     sub di, 6d	 ; take	into consid pushf, push	cs, push ip
+    117	    0160				 ??notSp:
     118
-    119	    0147  50 53	51 52 56 57	     push ax bx	cx dx si di
+    119	    0160  E8 000C			 call drawReg
     120
-    121					     ; init cycle
+    121	    0163  E8 0004			 call moveToNextLineVideoMem
     122
-    123	    014D  B9 0001		     mov cx, 1d
-    124
-    125	    0150  33 D2			     xor dx,dx
-    126	    0152  BA F000		     mov dx, 0f000h   ;	mask for reg nibble
-    127
-    128	    0155  BB 0370		     mov bx, (LENGTH_VIDEO_MEM_LINE * 5d + LENGTH_VIDEO_MEM_LINE / 2) *	2
+    123	    0166  41				 inc cx
+    124	    0167  EB E0				 jmp ??StartCycle
+    125	    0169			     ??endCycle:
+    126
+    127	    0169  C3			     ret
+    128	    016A			 drawAllRegs ENDP
     129
-    130	    0158			     ??startDrawingCycle:
-    131	    0158  83 F9	05		     cmp cx, 5d
-    132	    015B  7D 21	90 90		     jge ??endDrawingCycle
-    133	    015F  8B 46	04			 mov ax, ss:[bp	+ 04h]
-    134	    0162  23 C2				 and ax, dx
-    135
-    136	    0164  BE 0004			 mov si, 4d
-    137	    0167  2B F1				 sub si, cx
-    138	    0169  C1 E6	02			 shl si, 2
-    139
-    140	    016C  51				 push cx
-    141	    016D  8B CE				 mov cx, si
-    142	    016F  D3 E8				 shr ax, cl
-    143	    0171  59				 pop cx
-    144
-    145	    0172  E8 0013			 call convertNibbleToASCII
-    146
-    147						 ; mov byte ptr	es:[bx], al
-    148						 ; mov byte ptr	es:[bx + 1], SCAN_CODE_COLOR
+    130	    016A			 moveToNextLineVideoMem	PROC
+    131	    016A  81 C3	00A0			 add bx, LENGTH_VIDEO_MEM_LINE * 2d  ; move to next line
+    132	    016E  C3			     ret
+    133	    016F			 moveToNextLineVideoMem	ENDP
+    134
+    135					 ; CDECL
+    136					 ;-----------------------------------------------------------------------
+    137					 ; new Function	performed on int 09h draw regs values on '`' button press
+    138					 ; Entry: di = reg value to draw
+    139					 ; Exit:  no
+    140					 ; Exp:	  no
+    141					 ; Destr: no
+    142					 ;-----------------------------------------------------------------------
+    143
+    144	    016F			 drawReg PROC
+    145	    016F  55			     push bp
+    146	    0170  8B EC			     mov bp, sp
+    147
+    148	    0172  50 53	51 52 56 57	     push ax bx	cx dx si di
     149
-    150	    0175  83 C3	02			 add bx, 2
-    151	    0178  C1 EA	04			 shr dx, 4
-    152	    017B  41				 inc cx
-    153	    017C  EB DA			     jmp ??startDrawingCycle
-    154	    017E			     ??endDrawingCycle:
-    155
-    156	    017E  5F 5E	5A 59 5B 58	     pop di si dx cx bx	ax
+    150					     ; init cycle
+    151
+    152	    0178  B9 0001		     mov cx, 1d
+    153
+    154	    017B  33 D2			     xor dx,dx
+    155	    017D  BA F000		     mov dx, 0f000h   ;	mask for reg nibble
+    156
     157
-    158	    0184  8B E5			     mov sp, bp
-    159	    0186  5D			     pop bp
-    160	    0187  C3			     ret
-    161	    0188			 drawReg ENDP
-    162
-    163					 ;-----------------------------------------------------------------------
-    164					 ; converts number in nibble to	ASCII
-    165					 ; Entry: ax = nibble
-    166					 ;
-    167					 ; Exit:  ax = ASCII code
-    168					 ; Exp:	  no
-    169					 ; Destr: ax
-    170					 ;-----------------------------------------------------------------------
-    171
-Turbo Assembler	 Version 4.1	    02/21/26 00:06:51	    Page 4
+    158	    0180			     ??startDrawingCycle:
+    159	    0180  83 F9	05		     cmp cx, 5d
+    160	    0183  7D 28	90 90		     jge ??endDrawingCycle
+    161	    0187  8B C7				 mov ax, di
+    162	    0189  23 C2				 and ax, dx
+    163
+    164	    018B  BE 0004			 mov si, 4d
+    165	    018E  2B F1				 sub si, cx
+    166	    0190  C1 E6	02			 shl si, 2
+    167
+    168	    0193  51				 push cx
+    169	    0194  8B CE				 mov cx, si
+    170	    0196  D3 E8				 shr ax, cl
+    171	    0198  59				 pop cx
+Turbo Assembler	 Version 4.1	    02/21/26 18:09:32	    Page 4
 showreg.asm
 
 
 
-    172	    0188			 convertNibbleToASCII PROC
-    173					     ; case <= 9
+    172
+    173	    0199  E8 001B			 call convertNibbleToASCII
     174
-    175	    0188  3D 0009		     cmp ax, 9d
-    176	    018B  7F 08	90 90		     jg	??G9
-    177	    018F  05 0030			 add ax, DIFFERENCE_NUM_ASCII_L9
-    178	    0192  EB 04	90			 jmp ??end
-    179
-    180	    0195			     ??G9:
-    181
-    182					     ; case > 9
+    175	    019C  26: 88 07			 mov byte ptr es:[bx], al
+    176	    019F  26: C6 47 01 4E		 mov byte ptr es:[bx + 1], SCAN_CODE_COLOR
+    177
+    178	    01A4  83 C3	02			 add bx, 2
+    179	    01A7  C1 EA	04			 shr dx, 4
+    180	    01AA  41				 inc cx
+    181	    01AB  EB D3			     jmp ??startDrawingCycle
+    182	    01AD			     ??endDrawingCycle:
     183
-    184	    0195  05 0037		     add ax, DIFFERENCE_NUM_ASCII_G9
+    184	    01AD  5F 5E	5A 59 5B 58	     pop di si dx cx bx	ax
     185
-    186	    0198			     ??end:
-    187	    0198  C3			     ret
-    188	    0199			 convertNibbleToASCII ENDP
-    189
-    190					 ;-----------------------------------------------------------------------
-    191					 ; reset controllers to	original state
-    192					 ; Entry: no
-    193					 ; Exit:  no
-    194					 ; Exp:	  no
-    195					 ; Destr: al
-    196					 ;-----------------------------------------------------------------------
-    197
-    198	    0199			 resetControllers PROC
-    199					     ; reset keyboard controller MSB to	guarantee that keyboard	controller will	continue to +
-    200					 gen scan-codes
-    201	    0199  E4 61			     in	al, 61h
-    202	    019B  0C 80			     or	al, 80h
-    203	    019D  E6 61			     out 61h, al
-    204	    019F  24 7F			     and al, not 80h
-    205	    01A1  E6 61			     out 61h, al
-    206
-    207					     ; send EOI	to interrupt controller
-    208	    01A3  B0 20			     mov al, EOI
-    209	    01A5  E6 20			     out 20h, al
-    210
-    211	    01A7  C3			     ret
-    212	    01A8			 resetControllers ENDP
+    186	    01B3  8B E5			     mov sp, bp
+    187	    01B5  5D			     pop bp
+    188	    01B6  C3			     ret
+    189	    01B7			 drawReg ENDP
+    190
+    191					 ;-----------------------------------------------------------------------
+    192					 ; converts number in nibble to	ASCII
+    193					 ; Entry: ax = nibble
+    194					 ;
+    195					 ; Exit:  ax = ASCII code
+    196					 ; Exp:	  no
+    197					 ; Destr: ax
+    198					 ;-----------------------------------------------------------------------
+    199
+    200	    01B7			 convertNibbleToASCII PROC
+    201					     ; case <= 9
+    202
+    203	    01B7  3D 0009		     cmp ax, 9d
+    204	    01BA  7F 08	90 90		     jg	??G9
+    205	    01BE  05 0030			 add ax, DIFFERENCE_NUM_ASCII_L9
+    206	    01C1  EB 04	90			 jmp ??end
+    207
+    208	    01C4			     ??G9:
+    209
+    210					     ; case > 9
+    211
+    212	    01C4  05 0037		     add ax, DIFFERENCE_NUM_ASCII_G9
     213
-    214
-    215
-    216
+    214	    01C7			     ??end:
+    215	    01C7  C3			     ret
+    216	    01C8			 convertNibbleToASCII ENDP
     217
-    218					 ;-----------------------------------------------------------------
-    219					 ; Part	to put residental programm in memory
-    220					 ;-----------------------------------------------------------------
-    221
-    222	    01A8			 nonResident:
-    223	    01A8  58			     pop ax
-    224	    01A9  5B			     pop bx
-    225	    01AA  59			     pop cx
-    226
-    227	    01AB  51			     push cx
-    228	    01AC  53			     push bx
-Turbo Assembler	 Version 4.1	    02/21/26 00:06:51	    Page 5
+    218					 ;-----------------------------------------------------------------------
+    219					 ; reset controllers to	original state
+    220					 ; Entry: no
+    221					 ; Exit:  no
+    222					 ; Exp:	  no
+    223					 ; Destr: al
+    224					 ;-----------------------------------------------------------------------
+    225
+    226	    01C8			 resetControllers PROC
+    227					     ; reset keyboard controller MSB to	guarantee that keyboard	controller will	continue to +
+    228					 gen scan-codes
+Turbo Assembler	 Version 4.1	    02/21/26 18:09:32	    Page 5
 showreg.asm
 
 
 
-    229	    01AD  50			     push ax
-    230
-    231	    01AE  68 B800		     push VIDEO_MEM_START_ADDR
-    232	    01B1  07			     pop es
-    233	    01B2  BB 0370		     mov bx, (LENGTH_VIDEO_MEM_LINE * 5d + LENGTH_VIDEO_MEM_LINE / 2) *	2
+    229	    01C8  E4 61			     in	al, 61h
+    230	    01CA  0C 80			     or	al, 80h
+    231	    01CC  E6 61			     out 61h, al
+    232	    01CE  24 7F			     and al, not 80h
+    233	    01D0  E6 61			     out 61h, al
     234
-    235	    01B5  26: 89 07		     mov es:[bx], ax
-    236
-    237	    01B8  E8 0006		     call addOldIntHandlerJmp
+    235					     ; send EOI	to interrupt controller
+    236	    01D2  B0 20			     mov al, EOI
+    237	    01D4  E6 20			     out 20h, al
     238
-    239	    01BB  E8 0013		     call replaceInt09Handler
-    240
-    241	    01BE  E8 0024		     call keepProgAsResident
+    239	    01D6  C3			     ret
+    240	    01D7			 resetControllers ENDP
+    241
     242
     243
-    244	    01C1			 addOldIntHandlerJmp PROC
-    245	    01C1  6A 00			     push 0
-    246	    01C3  1F			     pop ds
-    247	    01C4  BE 0024		     mov si, 4 * 09h
-    248	    01C7  8C C8			     mov ax, cs
-    249	    01C9  8E C0			     mov es, ax
-    250	    01CB  BF 0123r		     mov di, offset OLD_INT09_HANDLER
-    251	    01CE  66| A5		     movsd
+    244
+    245
+    246					 ;-----------------------------------------------------------------
+    247					 ; Part	to put residental programm in memory
+    248					 ;-----------------------------------------------------------------
+    249
+    250	    01D7			 nonResident:
+    251	    01D7  E8 0006		     call addOldIntHandlerJmp
     252
-    253	    01D0  C3			     ret
-    254	    01D1			 addOldIntHandlerJmp ENDP
-    255
-    256	    01D1			 replaceInt09Handler PROC
-    257	    01D1  6A 00			     push 0
-    258	    01D3  07			     pop es
-    259	    01D4  BB 0024		     mov bx, 4 * 09h
-    260	    01D7  FA			     cli
-    261	    01D8  26: C7 07 0103r	     mov word ptr es:[bx], offset keyboardInt
-    262
-    263	    01DD  8C C8			     mov ax, cs
-    264	    01DF  26: 89 47 02		     mov word ptr es:[bx + 2], ax
-    265	    01E3  FB			     sti
-    266
-    267	    01E4  C3			     ret
-    268	    01E5			 replaceInt09Handler ENDP
-    269
-    270	    01E5			 keepProgAsResident PROC
-    271	    01E5  B8 3100		     mov ax, 3100h
-    272	    01E8  BA 01A8r		     mov dx, offset nonResident
-    273	    01EB  C1 EA	04		     shr dx, 4
-    274	    01EE  42			     inc dx
-    275	    01EF  CD 21			     int 21h
-    276
-    277	    01F1  C3			     ret
-    278	    01F2			 keepProgAsResident ENDP
+    253	    01DA  E8 0013		     call replaceInt09Handler
+    254
+    255	    01DD  E8 0024		     call keepProgAsResident
+    256
+    257	    01E0			 addOldIntHandlerJmp PROC
+    258	    01E0  6A 00			     push 0
+    259	    01E2  1F			     pop ds
+    260	    01E3  BE 0024		     mov si, 4 * 09h
+    261	    01E6  8C C8			     mov ax, cs
+    262	    01E8  8E C0			     mov es, ax
+    263	    01EA  BF 0129r		     mov di, offset OLD_INT09_HANDLER
+    264	    01ED  66| A5		     movsd
+    265
+    266	    01EF  C3			     ret
+    267	    01F0			 addOldIntHandlerJmp ENDP
+    268
+    269	    01F0			 replaceInt09Handler PROC
+    270	    01F0  6A 00			     push 0
+    271	    01F2  07			     pop es
+    272	    01F3  BB 0024		     mov bx, 4 * 09h
+    273	    01F6  FA			     cli
+    274	    01F7  26: C7 07 0103r	     mov word ptr es:[bx], offset keyboardInt
+    275
+    276	    01FC  8C C8			     mov ax, cs
+    277	    01FE  26: 89 47 02		     mov word ptr es:[bx + 2], ax
+    278	    0202  FB			     sti
     279
-    280					 end Start
-Turbo Assembler	 Version 4.1	    02/21/26 00:06:51	    Page 6
+    280	    0203  C3			     ret
+    281	    0204			 replaceInt09Handler ENDP
+    282
+    283	    0204			 keepProgAsResident PROC
+    284	    0204  B8 3100		     mov ax, 3100h
+    285	    0207  BA 01D7r		     mov dx, offset nonResident
+Turbo Assembler	 Version 4.1	    02/21/26 18:09:32	    Page 6
+showreg.asm
+
+
+
+    286	    020A  C1 EA	04		     shr dx, 4
+    287	    020D  42			     inc dx
+    288	    020E  CD 21			     int 21h
+    289
+    290	    0210  C3			     ret
+    291	    0211			 keepProgAsResident ENDP
+    292
+    293					 end Start
+Turbo Assembler	 Version 4.1	    02/21/26 18:09:32	    Page 7
 Symbol Table
 
 
@@ -312,13 +330,16 @@ Symbol Table
 Symbol Name			  Type	 Value
 
 ??DATE				  Text	 "02/21/26"
-??END				  Near	 DGROUP:0198
-??ENDDRAWINGCYCLE		  Near	 DGROUP:017E
+??END				  Near	 DGROUP:01C7
+??ENDCYCLE			  Near	 DGROUP:0169
+??ENDDRAWINGCYCLE		  Near	 DGROUP:01AD
 ??FILENAME			  Text	 "showreg "
-??G9				  Near	 DGROUP:0195
-??NOTNEEDEDSC			  Near	 DGROUP:0143
-??STARTDRAWINGCYCLE		  Near	 DGROUP:0158
-??TIME				  Text	 "00:06:51"
+??G9				  Near	 DGROUP:01C4
+??NOTNEEDEDSC			  Near	 DGROUP:0142
+??NOTSP				  Near	 DGROUP:0160
+??STARTCYCLE			  Near	 DGROUP:0149
+??STARTDRAWINGCYCLE		  Near	 DGROUP:0180
+??TIME				  Text	 "18:09:32"
 ??VERSION			  Number 040A
 @32BIT				  Text	 0
 @CODE				  Text	 DGROUP
@@ -332,21 +353,25 @@ Symbol Name			  Type	 Value
 @MODEL				  Text	 1
 @STACK				  Text	 DGROUP
 @WORDSIZE			  Text	 4
-ADDOLDINTHANDLERJMP		  Near	 DGROUP:01C1
-CONVERTNIBBLETOASCII		  Near	 DGROUP:0188
+ADDOLDINTHANDLERJMP		  Near	 DGROUP:01E0
+AMOUNT_NIBBLES_REGISTER		  Number 0004
+AMOUNT_REGS_DUMP		  Number 000D
+CONVERTNIBBLETOASCII		  Near	 DGROUP:01B7
 DIFFERENCE_NUM_ASCII_G9		  Number 0037
 DIFFERENCE_NUM_ASCII_L9		  Number 0030
-DRAWREG				  Near	 DGROUP:0144
+DRAWALLREGS			  Near	 DGROUP:0143
+DRAWREG				  Near	 DGROUP:016F
 EOI				  Number 0020
-HANDLESCANCODE			  Near	 DGROUP:0131
-KEEPPROGASRESIDENT		  Near	 DGROUP:01E5
+HANDLESCANCODE			  Near	 DGROUP:0137
+KEEPPROGASRESIDENT		  Near	 DGROUP:0204
 KEYBOARDINT			  Near	 DGROUP:0103
-KEYBOARDINTPREAMBLE		  Near	 DGROUP:0127
+KEYBOARDINTPREAMBLE		  Near	 DGROUP:012D
 LENGTH_VIDEO_MEM_LINE		  Number 0050
-NONRESIDENT			  Near	 DGROUP:01A8
-OLD_INT09_HANDLER		  Near	 DGROUP:0123
-REPLACEINT09HANDLER		  Near	 DGROUP:01D1
-RESETCONTROLLERS		  Near	 DGROUP:0199
+MOVETONEXTLINEVIDEOMEM		  Near	 DGROUP:016A
+NONRESIDENT			  Near	 DGROUP:01D7
+OLD_INT09_HANDLER		  Near	 DGROUP:0129
+REPLACEINT09HANDLER		  Near	 DGROUP:01F0
+RESETCONTROLLERS		  Near	 DGROUP:01C8
 SCAN_CODE_COLOR			  Number 004E
 SHOW_REG_BUTTON_SCAN_CODE	  Number 0029
 START				  Near	 DGROUP:0100
@@ -356,5 +381,5 @@ Groups & Segments		  Bit Size Align  Combine Class
 
 DGROUP				  Group
   _DATA				  16  0000 Word	  Public  DATA
-  _TEXT				  16  01F2 Word	  Public  CODE
+  _TEXT				  16  0211 Word	  Public  CODE
 
