@@ -81,7 +81,7 @@ handleScanCode PROC
 
         push di
         call drawReg
-        add sp, 4h
+        add sp, 2h
     ??notNeededSC:
 
     ret
@@ -104,21 +104,36 @@ drawReg PROC
 
     ; init cycle
 
-    mov ch, 1d
-    mov cl, 4d  
+    mov cx, 1d
 
     xor dx,dx 
-    mov dx, 0fh   ; mask for reg nibble 
+    mov dx, 0f000h   ; mask for reg nibble 
 
+    mov bx, (LENGTH_VIDEO_MEM_LINE * 5d + LENGTH_VIDEO_MEM_LINE / 2) * 2
     
     ??startDrawingCycle:
-    cmp ch, cl
+    cmp cx, 5d
     jge ??endDrawingCycle
-        mov ax, ss:[bp + 08h]
+        mov ax, ss:[bp + 04h]
         and ax, dx
+
+        mov si, 4d
+        sub si, cx
+        shl si, 2
+
+        push cx 
+        mov cx, si
+        shr ax, cl
+        pop cx
+
         call convertNibbleToASCII
 
-        inc ch
+        mov byte ptr es:[bx], al
+        mov byte ptr es:[bx + 1], SCAN_CODE_COLOR
+
+        add bx, 2
+        shr dx, 4
+        inc cx
     jmp ??startDrawingCycle
     ??endDrawingCycle:
 
@@ -192,6 +207,8 @@ nonResident:
 
     call replaceInt09Handler
     
+    
+
     int 09h
 
     call keepProgAsResident
