@@ -15,7 +15,7 @@ DIFFERENCE_NUM_ASCII_L9   equ 48d
 DIFFERENCE_NUM_ASCII_G9   equ 55d
 
 AMOUNT_NIBBLES_REGISTER   equ 4d
-AMOUNT_REGS_DUMP          equ 13d
+AMOUNT_REGS_DUMP          equ 11d
 
 FRAME_INIT_LEN_ADDR       equ 80h
 _FRAME_MODE_ADDR          equ 82h
@@ -39,10 +39,11 @@ Start: jmp nonResident
 ; Destr: no
 ;-----------------------------------------------------------------------
 
-frameSymbolsStr db 0C9h,0CDh,0BBh,0BAh,' ',0BAh,0C8h,0CDh,0BCh,'$'
+; frameSymbolsStr db 0C9h,0CDh,0BBh,0BAh,' ',0BAh,0C8h,0CDh,0BCh,'$'
+frameSymbolsStr db '123456789$'
 
 keyboardInt PROC
-    push sp bp ss es ds di si dx cx bx ax
+    push ss es ds di si dx cx bx ax
     
 
     push bp
@@ -57,7 +58,7 @@ keyboardInt PROC
     mov sp, bp
     pop bp
 
-    pop ax bx cx dx si di ds es ss bp sp
+    pop ax bx cx dx si di ds es ss
     db 0eah
 OLD_INT09_HANDLER: dd 0
 
@@ -122,11 +123,11 @@ drawAllRegs PROC
         shl si, 1          ; si = cx * 2
         mov di, [bp + si] 
 
-        ; amendment for sp reg case
-        cmp cx, AMOUNT_REGS_DUMP
-        jne ??notSp 
-            sub di, 6d  ; take into consid pushf, push cs, push ip
-        ??notSp:
+        ; ; amendment for sp reg case
+        ; cmp cx, AMOUNT_REGS_DUMP
+        ; jne ??notSp 
+        ;     sub di, 6d  ; take into consid pushf, push cs, push ip
+        ; ??notSp:
 
         call drawReg
 
@@ -301,6 +302,7 @@ NEW_LINE_SYMB 		EQU '#'
 END_STR_INPUT_SYMB	EQU '$'
 
 frameDrawingPart PROC
+
     mov ax, 0B800h  ; initializing video memory segment register
 	mov es, ax
 
@@ -865,8 +867,6 @@ nonResident:
     call addOldIntHandlerJmp
 
     call replaceInt09Handler 
-
-    int 09h
 
     call keepProgAsResident
 

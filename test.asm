@@ -6,6 +6,7 @@ org 100h
 Start: 
     mov bx, 0d
     mov cx, 3d
+    mov dx, 5d
 
     startCycle:
     cmp bx, 60000d
