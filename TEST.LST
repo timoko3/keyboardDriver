@@ -1,4 +1,4 @@
-Turbo Assembler	 Version 4.1	    02/21/26 17:38:22	    Page 1
+Turbo Assembler	 Version 4.1	    02/24/26 22:17:54	    Page 1
 test.asm
 
 
@@ -9,31 +9,33 @@ test.asm
       4					 org 100h
       5
       6	    0100			 Start:
-      7	    0100  BB 0000		     mov bx, 0d
-      8	    0103  B9 0003		     mov cx, 3d
-      9
-     10	    0106			     startCycle:
-     11	    0106  81 FB	EA60		     cmp bx, 60000d
-     12	    010A  74 05	90 90		     je	endCycle
-     13	    010E  43				 inc bx
-     14	    010F  EB F5				 jmp startCycle
-     15	    0111			     endCycle:
-     16
-     17	    0111  BB 0000		     mov bx, 0d
+      7	    0100  CD 09			     int 09h
+      8
+      9	    0102  BB 0000		     mov bx, 0d
+     10	    0105  B9 0003		     mov cx, 3d
+     11
+     12	    0108			     startCycle:
+     13	    0108  81 FB	EA60		     cmp bx, 60000d
+     14	    010C  74 05	90 90		     je	endCycle
+     15	    0110  43				 inc bx
+     16	    0111  EB F5				 jmp startCycle
+     17	    0113			     endCycle:
      18
-     19	    0114			     startCycle2:
-     20	    0114  81 FB	EA60		     cmp bx, 60000d
-     21	    0118  74 05	90 90		     je	endCycle2
-     22	    011C  43				 inc bx
-     23	    011D  EB F5				 jmp startCycle2
-     24	    011F			     endCycle2:
-     25
-     26	    011F  41			     inc cx
+     19	    0113  BB 0000		     mov bx, 0d
+     20
+     21	    0116			     startCycle2:
+     22	    0116  81 FB	EA60		     cmp bx, 60000d
+     23	    011A  74 05	90 90		     je	endCycle2
+     24	    011E  43				 inc bx
+     25	    011F  EB F5				 jmp startCycle2
+     26	    0121			     endCycle2:
      27
-     28	    0120  B8 4C00		     mov ax, 04C00h
-     29	    0123  CD 21			     int 21h
-     30					 end Start
-Turbo Assembler	 Version 4.1	    02/21/26 17:38:22	    Page 2
+     28	    0121  41			     inc cx
+     29
+     30	    0122  B8 4C00		     mov ax, 04C00h
+     31	    0125  CD 21			     int 21h
+     32					 end Start
+Turbo Assembler	 Version 4.1	    02/24/26 22:17:54	    Page 2
 Symbol Table
 
 
@@ -41,9 +43,9 @@ Symbol Table
 
 Symbol Name			  Type	 Value
 
-??DATE				  Text	 "02/21/26"
+??DATE				  Text	 "02/24/26"
 ??FILENAME			  Text	 "test	  "
-??TIME				  Text	 "17:38:22"
+??TIME				  Text	 "22:17:54"
 ??VERSION			  Number 040A
 @32BIT				  Text	 0
 @CODE				  Text	 DGROUP
@@ -57,15 +59,15 @@ Symbol Name			  Type	 Value
 @MODEL				  Text	 1
 @STACK				  Text	 DGROUP
 @WORDSIZE			  Text	 4
-ENDCYCLE			  Near	 DGROUP:0111
-ENDCYCLE2			  Near	 DGROUP:011F
+ENDCYCLE			  Near	 DGROUP:0113
+ENDCYCLE2			  Near	 DGROUP:0121
 START				  Near	 DGROUP:0100
-STARTCYCLE			  Near	 DGROUP:0106
-STARTCYCLE2			  Near	 DGROUP:0114
+STARTCYCLE			  Near	 DGROUP:0108
+STARTCYCLE2			  Near	 DGROUP:0116
 
 Groups & Segments		  Bit Size Align  Combine Class
 
 DGROUP				  Group
   _DATA				  16  0000 Word	  Public  DATA
-  _TEXT				  16  0125 Word	  Public  CODE
+  _TEXT				  16  0127 Word	  Public  CODE
 

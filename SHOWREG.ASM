@@ -17,10 +17,10 @@ DIFFERENCE_NUM_ASCII_G9   equ 55d
 AMOUNT_NIBBLES_REGISTER   equ 4d
 AMOUNT_REGS_DUMP          equ 13d
 
-FRAME_INIT_LEN_ADDR       equ 80h
-_FRAME_MODE_ADDR          equ 82h
-_FRAME_SYMBOLS_START_ADDR equ 84h
-_FRAME_TEXT_ADDR          equ 84h + 0ah
+DELAY_AMOUNT_ITERATIONS_CYCLE equ 65000d
+
+_FRAME_SYMBOLS_START_ADDR equ offset frameSymbolsStr
+_FRAME_TEXT_ADDR          equ offset frameText
 
 
                     
@@ -39,16 +39,12 @@ Start: jmp nonResident
 ; Destr: no
 ;-----------------------------------------------------------------------
 
-frameSymbolsStr db 0C9h,0CDh,0BBh,0BAh,' ',0BAh,0C8h,0CDh,0BCh,'$'
-
 keyboardInt PROC
     push sp bp ss es ds di si dx cx bx ax
     
 
     push bp
     mov bp, sp 
-
-    call keyboardIntPreamble
 
     call handleScanCode
 
@@ -62,25 +58,6 @@ keyboardInt PROC
 OLD_INT09_HANDLER: dd 0
 
 keyboardInt ENDP
-
-;-----------------------------------------------------------------------
-; preamble of int 09h function
-; Entry: no
-; Exit:  no
-; Exp:   no
-; Destr: es, bx, ah
-;-----------------------------------------------------------------------
-
-keyboardIntPreamble PROC
-    
-    push VIDEO_MEM_START_ADDR
-    pop es
-    mov bx, (LENGTH_VIDEO_MEM_LINE * 5d + LENGTH_VIDEO_MEM_LINE / 2) * 2   ; set start of video mem to write to the 5th line center
-
-    mov ah, SCAN_CODE_COLOR  ;set color for scan-code to show 
-
-    ret
-keyboardIntPreamble ENDP
 
 ;-----------------------------------------------------------------------
 ; read info from keyboard port 60h and 
@@ -98,9 +75,7 @@ handleScanCode PROC
     jne ??notNeededSC
 
         call drawAllRegs
-
-        mov ax, ss
-        mov ds, ax
+    
         call frameDrawingPart
 
     ??notNeededSC:
@@ -113,7 +88,7 @@ drawAllRegs PROC
 
     mov cx, 1d 
 
-    call putInMemFrameParams 
+    ; call putInMemFrameParams 
 
     ??StartCycle:
     cmp cx, AMOUNT_REGS_DUMP + 1d 
@@ -130,16 +105,22 @@ drawAllRegs PROC
 
         call drawReg
 
-        mov byte ptr ss:[bx], '#'
-        add bx, 1
-        ; call moveToNextLineVideoMem
+        test cx, 01h
+        jz ??sameLine
+            mov byte ptr cs:[bx], ' '
+            jmp ??postambleCycle            
 
+        ??sameLine:
+            mov byte ptr cs:[bx], '#'
+
+        ??postambleCycle:
+        add bx, 1
         inc cx
         jmp ??StartCycle
     ??endCycle:
 
     dec bx 
-    mov byte ptr ss:[bx], '$'
+    mov byte ptr cs:[bx], '$'
 
     ret
 drawAllRegs ENDP
@@ -159,9 +140,6 @@ moveToNextLineVideoMem ENDP
 ;-----------------------------------------------------------------------
 
 drawReg PROC
-    push bp
-    mov bp, sp
-
     push ax cx dx si di
 
     ; init cycle
@@ -189,7 +167,7 @@ drawReg PROC
 
         call convertNibbleToASCII
 
-        mov byte ptr ss:[bx], al
+        mov byte ptr cs:[bx], al
 
         add bx, 1
         shr dx, 4
@@ -198,9 +176,6 @@ drawReg PROC
     ??endDrawingCycle:
 
     pop di si dx cx ax
-
-    mov sp, bp
-    pop bp
     ret 
 drawReg ENDP
 
@@ -231,33 +206,33 @@ convertNibbleToASCII PROC
     ret 
 convertNibbleToASCII ENDP
 
-putInMemFrameParams PROC
-    push ax cx si di
+; putInMemFrameParams PROC
+;     push ax cx si di
     
-    mov si, FRAME_INIT_LEN_ADDR
-    mov byte ptr ss:[si], 1d
+;     mov si, FRAME_INIT_LEN_ADDR
+;     mov byte ptr ss:[si], 1d
 
-    mov si, _FRAME_MODE_ADDR
-    mov byte ptr ss:[si], 3d
+;     mov si, _FRAME_MODE_ADDR
+;     mov byte ptr ss:[si], 3d
 
-    mov si, _FRAME_SYMBOLS_START_ADDR
+;     mov si, _FRAME_SYMBOLS_START_ADDR
 
-    mov si, offset frameSymbolsStr
-    mov di, _FRAME_SYMBOLS_START_ADDR
-    mov cx, 9d
-    push ds es
+;     mov si, offset frameSymbolsStr
+;     mov di, _FRAME_SYMBOLS_START_ADDR
+;     mov cx, 9d
+;     push ds es
 
-    mov ax, cs
-    mov ds, ax 
-    mov es, ax
+;     mov ax, cs
+;     mov ds, ax 
+;     mov es, ax
 
-    rep movsb
+;     rep movsb
 
-    pop es ds
+;     pop es ds
 
-    pop di si cx ax 
-    ret 
-putInMemFrameParams ENDP
+;     pop di si cx ax 
+;     ret 
+; putInMemFrameParams ENDP
 
 ;-----------------------------------------------------------------------
 ; reset controllers to original state 
@@ -338,7 +313,7 @@ animationMode PROC
 		mov si, _FRAME_SYMBOLS_START_ADDR
 
 		xor bx, bx
-	    mov bx, 160 * 5 + 80; init video segment shift  
+	    mov bx, 160 * 2 + 80; init video segment shift  
 
 		call animationDrawFrame
 
@@ -383,7 +358,7 @@ animationDrawFrame PROC
 	call animationDrawFrameLines
 
 	push cx
-	mov cx, 65000d
+	mov cx, DELAY_AMOUNT_ITERATIONS_CYCLE
 	call delayForAnimation
 	pop cx
 
@@ -455,7 +430,7 @@ animationDrawSingleLine PROC
 
 	call startFrameLine
 
-	mov dl, ss:[si]
+	mov dl, cs:[si]
 	add si, 1d
 
 	xor ax, ax
@@ -491,7 +466,7 @@ moveBaseToNextLineStartPos ENDP
 startFrameLine PROC
 	call findSymForStr
 
-	mov dl, ss:[si]
+	mov dl, cs:[si]
 	add si, 1d
 	call outSymbol
 
@@ -499,7 +474,7 @@ startFrameLine PROC
 startFrameLine ENDP
 
 endFrameLine PROC
-	mov dl, ss:[si]
+	mov dl, cs:[si]
 	call outSymbol
 
 	ret
@@ -529,7 +504,7 @@ countTextStartLine ENDP
 ;-----------------------------------------------------------------------
 
 animationDrawText PROC
-	mov dl, ss:[si]
+	mov dl, cs:[si]
 	call outSymbol
 	call outSymbol
 	add si, 1d
@@ -592,7 +567,7 @@ printCompModeStrPreamble PROC
 	call outSymbol
 
 	inc si
-	mov dl, ss:[si]
+	mov dl, cs:[si]
 	call outSymbol
 	call outSymbol
 
@@ -612,7 +587,7 @@ printCompModeStrPostamble PROC
 	call outSymbol
 
 	inc si
-	mov dl, ss:[si]
+	mov dl, cs:[si]
 	call outSymbol
 
 	ret
@@ -627,25 +602,27 @@ printCompModeStrPostamble ENDP
 ; Destr: si
 ;-----------------------------------------------------------------------
 
+_FRAME_SYMBOLS_START_ADDR_LOCAL equ offset frameSymbolsStr
+
 findSymForStr PROC
-	cmp ah, 1
+	cmp ah, 1d
 	jne notFirst
-		mov si, 84h
+		mov si, _FRAME_SYMBOLS_START_ADDR_LOCAL
 		ret
 
 	notFirst:
-	sub al, 1
+	sub al, 1d
 	cmp ah, al
 	
 	jne notLast
-		mov si, 84h + 6
+		mov si, _FRAME_SYMBOLS_START_ADDR_LOCAL + 6d
 		jmp ??endFind
 	notLast:
 
-	mov si, 84h + 3
+	mov si, _FRAME_SYMBOLS_START_ADDR_LOCAL + 3d
 
 	??endFind:
-	add al, 1
+	add al, 1d
 	ret
 findSymForStr ENDP
 
@@ -692,7 +669,7 @@ printText PROC
 
 	; text to videomem 
 	cycleStart:																																													
-	mov ah, [si]
+	mov ah, cs:[si]
 
 	cmp ah, dh 
 	je endStr
@@ -739,7 +716,7 @@ countLineMaxLen PROC
 
 	inc al 
 
-	mov dl, [si]
+	mov dl, cs:[si]
 	cmp dl, END_STR_INPUT_SYMB
 	je ??cycleEnd
 
@@ -769,7 +746,7 @@ strlen PROC
 	xor cx, cx
 	
 	strlenCycle:
-	mov ah, [di]
+	mov ah, cs:[di]
 
 	cmp ah, dh
 	je strlenEnd
@@ -853,7 +830,8 @@ delayForAnimation PROC
 	ret
 delayForAnimation ENDP
 
-
+frameSymbolsStr db 0C9h,0CDh,0BBh,0BAh,' ',0BAh,0C8h,0CDh,0BCh,'$' 
+frameText       db 150 dup(0)
 
 
 
@@ -864,9 +842,7 @@ delayForAnimation ENDP
 nonResident:
     call addOldIntHandlerJmp
 
-    call replaceInt09Handler 
-
-    int 09h
+    call replaceInt09Handler         
 
     call keepProgAsResident
 
