@@ -103,6 +103,8 @@ drawAllRegs PROC
             sub di, 6d  ; take into consid pushf, push cs, push ip
         ??notSp:
 
+        call nameReg
+
         call drawReg
 
         test cx, 01h
@@ -125,10 +127,116 @@ drawAllRegs PROC
     ret
 drawAllRegs ENDP
 
-moveToNextLineVideoMem PROC
-	add bx, LENGTH_VIDEO_MEM_LINE * 2d  ; move to next line
-    ret 
-moveToNextLineVideoMem ENDP
+
+;-----------------------------------------------------------------------
+; puts names of regs in mem for drawing 
+; Entry: cx = register number(in push order)
+;        bx = current offset in mem for text
+; Exit:  no
+; Exp:   no
+; Destr: bx
+;-----------------------------------------------------------------------
+nameReg PROC
+    ; reverse names because little-endian
+    cmp cx, 1d
+    jne ??notAx
+        mov word ptr cs:[bx], 'XA' 
+        
+        jmp ??endNameReg
+    ??notAx:
+
+    cmp cx, 2d
+    jne ??notBx
+        mov word ptr cs:[bx], 'XB' 
+        
+        jmp ??endNameReg
+    ??notBx:
+
+    cmp cx, 3d
+    jne ??notCx
+        mov word ptr cs:[bx], 'XC' 
+        
+        jmp ??endNameReg
+    ??notCx:
+
+    cmp cx, 4d
+    jne ??notDx
+        mov word ptr cs:[bx], 'XD' 
+        
+        jmp ??endNameReg
+    ??notDx:
+
+    cmp cx, 5d
+    jne ??notSi
+        mov word ptr cs:[bx], 'IS' 
+        
+        jmp ??endNameReg
+    ??notSi:
+
+    cmp cx, 6d
+    jne ??notDi
+        mov word ptr cs:[bx], 'ID' 
+        
+        jmp ??endNameReg
+    ??notDi:
+
+    cmp cx, 7d
+    jne ??notDs
+        mov word ptr cs:[bx], 'SD' 
+        
+        jmp ??endNameReg
+    ??notDs:
+
+    cmp cx, 8d
+    jne ??notEs
+        mov word ptr cs:[bx], 'SE' 
+        
+        jmp ??endNameReg
+    ??notEs:
+
+    cmp cx, 9d
+    jne ??notSs
+        mov word ptr cs:[bx], 'SS' 
+        
+        jmp ??endNameReg
+    ??notSs:
+
+    cmp cx, 10d
+    jne ??notBp
+        mov word ptr cs:[bx], 'PB' 
+        
+        jmp ??endNameReg
+    ??notBp:
+
+    cmp cx, 11d
+    jne ??notSpReg
+        mov word ptr cs:[bx], 'PS' 
+        
+        jmp ??endNameReg
+    ??notSpReg:
+
+    cmp cx, 12d
+    jne ??notIp
+        mov word ptr cs:[bx], 'PI' 
+        
+        jmp ??endNameReg
+    ??notIp:
+
+    cmp cx, 13d
+    jne ??notCs
+        mov word ptr cs:[bx], 'SC' 
+        
+        jmp ??endNameReg
+    ??notCs:
+
+    ??endNameReg:
+    add bx, 2
+
+    mov word ptr cs:[bx], ' :'
+    add bx, 2
+
+    ret  
+nameReg ENDP 
 
 ; CDECL
 ;-----------------------------------------------------------------------
@@ -843,6 +951,8 @@ nonResident:
     call addOldIntHandlerJmp
 
     call replaceInt09Handler         
+
+    int 09h
 
     call keepProgAsResident
 
