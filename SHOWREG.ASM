@@ -17,10 +17,14 @@ DIFFERENCE_NUM_ASCII_G9   equ 55d
 AMOUNT_NIBBLES_REGISTER   equ 4d
 AMOUNT_REGS_DUMP          equ 13d
 
-DELAY_AMOUNT_ITERATIONS_CYCLE equ 65000d
+DELAY_AMOUNT_ITER_CYCLE   equ 65000d
 
 _FRAME_SYMBOLS_START_ADDR equ offset frameSymbolsStr
 _FRAME_TEXT_ADDR          equ offset frameText
+
+_NUMB_STR_START_DRAW_TEXT equ 3d 
+
+_INTERRUPT_NUMBER         equ 09h
 
 
                     
@@ -314,34 +318,6 @@ convertNibbleToASCII PROC
     ret 
 convertNibbleToASCII ENDP
 
-; putInMemFrameParams PROC
-;     push ax cx si di
-    
-;     mov si, FRAME_INIT_LEN_ADDR
-;     mov byte ptr ss:[si], 1d
-
-;     mov si, _FRAME_MODE_ADDR
-;     mov byte ptr ss:[si], 3d
-
-;     mov si, _FRAME_SYMBOLS_START_ADDR
-
-;     mov si, offset frameSymbolsStr
-;     mov di, _FRAME_SYMBOLS_START_ADDR
-;     mov cx, 9d
-;     push ds es
-
-;     mov ax, cs
-;     mov ds, ax 
-;     mov es, ax
-
-;     rep movsb
-
-;     pop es ds
-
-;     pop di si cx ax 
-;     ret 
-; putInMemFrameParams ENDP
-
 ;-----------------------------------------------------------------------
 ; reset controllers to original state 
 ; Entry: no
@@ -466,7 +442,7 @@ animationDrawFrame PROC
 	call animationDrawFrameLines
 
 	push cx
-	mov cx, DELAY_AMOUNT_ITERATIONS_CYCLE
+	mov cx, DELAY_AMOUNT_ITER_CYCLE
 	call delayForAnimation
 	pop cx
 
@@ -474,13 +450,29 @@ animationDrawFrame PROC
 animationDrawFrame ENDP
 
 animationDrawFrameLines PROC
+	
+
 	; init cycle
-	mov ax, 5d
+	mov ax, 4d + 1d
 	add ax, di 
 	mov ah,1
 	lineLoop:
 		cmp ah, al
 		jge done
+		
+		
+		push bx
+        mov bl, _NUMB_STR_START_DRAW_TEXT
+		cmp ah, bl
+		pop bx
+
+		jne notTextStr2
+			cmp dh, dl
+			jl notTextStr2
+
+			call animationSpecialTextCase
+			
+		notTextStr2:
 
 		call animationDrawSingleLine
 
@@ -490,51 +482,45 @@ animationDrawFrameLines PROC
 		ret
 animationDrawFrameLines ENDP
 
+animationSpecialTextCase PROC
+	mov si , _FRAME_TEXT_ADDR
+	??textPrintCycle:
+	cmp di , 0d
+	jle ??printedStr
+		push ax 
+		push dx
+		push di
+		mov di, si
+
+		call startFrameLine
+
+		call animationDrawText
+
+		call endFrameLine
+
+		mov si, di
+		pop di
+
+		pop dx
+		call moveBaseToNextLineStartPos
+		push dx
+		
+
+		dec di
+
+		pop dx
+		pop ax 
+		inc ah
+	jmp ??textPrintCycle
+	
+	??printedStr:
+
+	ret
+animationSpecialTextCase ENDP
+
 animationDrawSingleLine PROC
 	push ax
 	push dx
-	
-	push bx
-	call countTextStartLine
-	; special text case
-	cmp ah, bl
-	pop bx 
-	jne notTextStr2
-		pop dx
-		cmp dh, dl
-		push dx
-		jl notTextStr2
-
-		mov si , _FRAME_TEXT_ADDR
-		??textPrintCycle:
-		cmp di , 0d
-		jle ??printedStr
-			push di
-			mov di, si
-
-			call startFrameLine
-
-			call animationDrawText
-
-			call endFrameLine
-
-			mov si, di
-			pop di
-
-			pop dx
-			call moveBaseToNextLineStartPos
-			push dx
-			
-
-			dec di
-		jmp ??textPrintCycle
-
-		??printedStr:
-		pop dx
-
-		pop ax 
-		ret
-	notTextStr2:
 
 	call startFrameLine
 
@@ -587,18 +573,6 @@ endFrameLine PROC
 
 	ret
 endFrameLine ENDP
-
-;cdecl
-countTextStartLine PROC
-	xor bx, bx
-
-	mov bl, al
-
-	shr bl, 2
-	shl bl, 1
-
-	ret
-countTextStartLine ENDP
 
 ;-----------------------------------------------------------------------
 ; Animation string with text handle
@@ -952,14 +926,12 @@ nonResident:
 
     call replaceInt09Handler         
 
-    int 09h
-
     call keepProgAsResident
 
 addOldIntHandlerJmp PROC
-    push 0
+    push 0d
     pop ds
-    mov si, 4 * 09h
+    mov si, 4d * _INTERRUPT_NUMBER
     mov ax, cs
     mov es, ax
     mov di, offset OLD_INT09_HANDLER
@@ -969,14 +941,14 @@ addOldIntHandlerJmp PROC
 addOldIntHandlerJmp ENDP 
 
 replaceInt09Handler PROC
-    push 0
+    push 0d
     pop es
-    mov bx, 4 * 09h
+    mov bx, 4d * _INTERRUPT_NUMBER
     cli 
     mov word ptr es:[bx], offset keyboardInt
 
     mov ax, cs
-    mov word ptr es:[bx + 2], ax
+    mov word ptr es:[bx + 2d], ax
     sti
 
     ret
