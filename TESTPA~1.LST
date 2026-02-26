@@ -1,0 +1,51 @@
+Turbo Assembler	 Version 4.1	    02/25/26 18:30:52	    Page 1
+testpa~1.asm
+
+
+
+      1	    0000			 .model	tiny
+      2	    0000			 .code
+      3					 .386
+      4					 org 100h
+      5
+      6	    0100			 Start:
+      7
+      8	    0100  B4 05			     mov ah, 05h
+      9	    0102  B0 04			     mov al, 4d
+     10	    0104  CD 10			     int 10h
+     11
+     12	    0106  B8 4C00		     mov ax, 04C00h
+     13	    0109  CD 21			     int 21h
+     14					 end Start
+Turbo Assembler	 Version 4.1	    02/25/26 18:30:52	    Page 2
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "02/25/26"
+??FILENAME			  Text	 "testpa~1"
+??TIME				  Text	 "18:30:52"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 DGROUP
+@CODESIZE			  Text	 0
+@CPU				  Text	 0F0FH
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 TESTPA~1
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 1
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 4
+START				  Near	 DGROUP:0100
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+  _TEXT				  16  010B Word	  Public  CODE
+

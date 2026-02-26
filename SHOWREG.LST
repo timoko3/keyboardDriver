@@ -1,4 +1,4 @@
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 1
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 1
 showreg.asm
 
 
@@ -60,7 +60,7 @@ showreg.asm
      55
      56	    0114  E8 017F		     call resetControllers
      57
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 2
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 2
 showreg.asm
 
 
@@ -122,7 +122,7 @@ showreg.asm
     112	    0156  E8 0022			 call nameReg
     113
     114	    0159  E8 00EE			 call drawReg
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 3
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 3
 showreg.asm
 
 
@@ -184,7 +184,7 @@ showreg.asm
     169	    01AB  75 0A	90 90		     jne ??notDx
     170	    01AF  2E: C7 07 5844		 mov word ptr cs:[bx], 'XD'
     171
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 4
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 4
 showreg.asm
 
 
@@ -246,7 +246,7 @@ showreg.asm
     226	    0227  2E: C7 07 5049		 mov word ptr cs:[bx], 'PI'
     227
     228	    022C  EB 10	90			 jmp ??endNameReg
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 5
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 5
 showreg.asm
 
 
@@ -308,7 +308,7 @@ showreg.asm
     283
     284	    0273  2E: 88 07			 mov byte ptr cs:[bx], al
     285
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 6
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 6
 showreg.asm
 
 
@@ -370,7 +370,7 @@ showreg.asm
     340					     ; send EOI	to interrupt controller
     341	    02A0  B0 20			     mov al, EOI
     342	    02A2  E6 20			     out 20h, al
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 7
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 7
 showreg.asm
 
 
@@ -432,7 +432,7 @@ showreg.asm
     397	    02BD  7F 14	90 90			 jg endAnimationCycle
     398	    02C1  50					 push ax
     399
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 8
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 8
 showreg.asm
 
 
@@ -494,7 +494,7 @@ showreg.asm
     454
     455	    030B			 animationDrawFrameLines PROC
     456
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 9
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 9
 showreg.asm
 
 
@@ -556,7 +556,7 @@ showreg.asm
     511
     512	    0353  4F					 dec di
     513
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 10
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 10
 showreg.asm
 
 
@@ -618,7 +618,7 @@ showreg.asm
     568	    0390  E8 00F4			 call outSymbol
     569
     570	    0393  C3				 ret
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 11
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 11
 showreg.asm
 
 
@@ -680,7 +680,7 @@ showreg.asm
     625
     626					 ;-----------------------------------------------------------------------
     627					 ; finds amount	of animation iterations
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 12
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 12
 showreg.asm
 
 
@@ -742,7 +742,7 @@ showreg.asm
     682					 ; pareses current needed symbols of frame from	cmd line
     683					 ; Entry: ah = current str to print
     684					 ;		  al = last str
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 13
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 13
 showreg.asm
 
 
@@ -804,7 +804,7 @@ showreg.asm
     739	    0424				 endFrameCycle:
     740
     741	    0424  C3				 ret
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 14
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 14
 showreg.asm
 
 
@@ -866,7 +866,7 @@ showreg.asm
     796
     797	    0450  3B D9				 cmp bx, cx
     798	    0452  7F 04	90 90			 jg ??notGreaterLine
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 15
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 15
 showreg.asm
 
 
@@ -928,7 +928,7 @@ showreg.asm
     853					 ; Exp:	  es:[bx] = point to appropriate memCell
     854					 ; Destr: bx
     855					 ;-----------------------------------------------------------------------
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 16
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 16
 showreg.asm
 
 
@@ -990,7 +990,7 @@ showreg.asm
     910
     911	    04AE			 delayForAnimation PROC
     912	    04AE				 delay:
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 17
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 17
 showreg.asm
 
 
@@ -1052,14 +1052,14 @@ showreg.asm
     967
     968	    058B  C3			     ret
     969	    058C			 keepProgAsResident ENDP
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 18
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 18
 showreg.asm
 
 
 
     970
     971					 end Start
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 19
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 19
 Symbol Table
 
 
@@ -1103,7 +1103,7 @@ Symbol Name			  Type	 Value
 ??STARTCYCLE			  Near	 DGROUP:013F
 ??STARTDRAWINGCYCLE		  Near	 DGROUP:0257
 ??TEXTPRINTCYCLE		  Near	 DGROUP:0336
-??TIME				  Text	 "18:07:55"
+??TIME				  Text	 "19:15:56"
 ??VERSION			  Number 040A
 @32BIT				  Text	 0
 @CODE				  Text	 DGROUP
@@ -1121,7 +1121,7 @@ ADDOLDINTHANDLERJMP		  Near	 DGROUP:055B
 ALIGNFRAME			  Near	 DGROUP:049C
 AMOUNT_NIBBLES_REGISTER		  Number 0004
 AMOUNT_REGS_DUMP		  Number 000D
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 20
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 20
 Symbol Table
 
 
@@ -1183,7 +1183,7 @@ PRINTTEXT			  Near	 DGROUP:0425
 REPLACEINT09HANDLER		  Near	 DGROUP:056B
 RESETCONTROLLERS		  Near	 DGROUP:0296
 SCAN_CODE_COLOR			  Number 004E
-Turbo Assembler	 Version 4.1	    02/25/26 18:07:55	    Page 21
+Turbo Assembler	 Version 4.1	    02/25/26 19:15:56	    Page 21
 Symbol Table
 
 
