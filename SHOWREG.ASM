@@ -344,6 +344,7 @@ animationMode PROC
 	call calcStartStep
 
 	; mov cx, di
+	mov dh, al ;correction to remove animation in interrupt
 	StartAnimationCycle:
 	cmp dh, al
 	jg endAnimationCycle
