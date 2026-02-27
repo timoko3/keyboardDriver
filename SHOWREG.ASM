@@ -24,11 +24,31 @@ _FRAME_TEXT_ADDR          equ offset frameText
 
 _NUMB_STR_START_DRAW_TEXT equ 3d 
 
-_INTERRUPT_NUMBER         equ 09h
+_KEYBOARD_INT_NUMBER      equ 09h
+_TIMER_INT_NUMBER         equ 08h
+
 
 
                     
 Start: jmp nonResident
+
+IS_KEY_PRESSED_FLAGS db 0d, 0d, '$'
+
+
+; --------------------------------------------------------------------------
+; new int 08 handler part
+; --------------------------------------------------------------------------
+
+timerInt PROC
+	push ss es ds di si dx cx bx ax
+
+	db 0eah
+	OLD_INT08_HANDLER: dd 0
+
+	pop ax bx cx dx si di ds es ss bp sp 
+timerInt ENDP
+
+
 
 ; --------------------------------------------------------------------------
 ; new int 09 handler part
@@ -843,29 +863,56 @@ frameText       db 150 dup(0)
 
 nonResident:
 	cli
+
+	mov di, offset OLD_INT09_HANDLER
+	mov ax, _KEYBOARD_INT_NUMBER
     call addOldIntHandlerJmp
 
+	mov di, offset keyboardInt
+	mov ax, _KEYBOARD_INT_NUMBER
     call replaceInt09Handler         
 
     call keepProgAsResident
+
 	sti
+
+;-----------------------------------------------------------------------
+; Adding jump to old handler in new handler
+; Entry: ax = interrupt number
+; 		 di = old interrupt jump addr
+; Exit:  nop
+; Exp:   nop
+; Destr: ds, es, ax, si
+;-----------------------------------------------------------------------
+
 addOldIntHandlerJmp PROC
     push 0d
     pop ds
-    mov si, 4d * _INTERRUPT_NUMBER
+    mov si, ax
+	shl si, 2d
     mov ax, cs
     mov es, ax
-    mov di, offset OLD_INT09_HANDLER
+    
     movsd
 
     ret
 addOldIntHandlerJmp ENDP 
 
+;-----------------------------------------------------------------------
+; replaces old int handler with new one
+; Entry: ax = interrupt number
+; 		 di = new int handler proc addr
+; Exit:  nop
+; Exp:   nop
+; Destr: es, bx, ax
+;-----------------------------------------------------------------------
+
 replaceInt09Handler PROC
     push 0d
     pop es
-    mov bx, 4d * _INTERRUPT_NUMBER
-    mov word ptr es:[bx], offset keyboardInt
+    mov bx, ax
+	shl bx, 2d
+    mov word ptr es:[bx], di
 
     mov ax, cs
     mov word ptr es:[bx + 2d], ax
