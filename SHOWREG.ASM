@@ -15,7 +15,7 @@ DIFFERENCE_NUM_ASCII_L9   equ 48d
 DIFFERENCE_NUM_ASCII_G9   equ 55d
 
 AMOUNT_NIBBLES_REGISTER   equ 4d
-AMOUNT_REGS_DUMP          equ 11d
+AMOUNT_REGS_DUMP          equ 13d
 
 DELAY_AMOUNT_ITER_CYCLE   equ 65000d
 
@@ -44,20 +44,16 @@ Start: jmp nonResident
 ;-----------------------------------------------------------------------
 
 keyboardInt PROC
-    push ss es ds di si dx cx bx ax
+    push sp bp ss es ds di si dx cx bx ax
     
-
-    push bp
     mov bp, sp 
 
     call handleScanCode
 
     call resetControllers
 
-    mov sp, bp
-    pop bp
 
-    pop ax bx cx dx si di ds es ss
+    pop ax bx cx dx si di ds es ss bp sp
     db 0eah
 OLD_INT09_HANDLER: dd 0
 
@@ -98,14 +94,15 @@ drawAllRegs PROC
     cmp cx, AMOUNT_REGS_DUMP + 1d 
     jge ??endCycle 
         mov si, cx
-        shl si, 1          ; si = cx * 2
+		sub si, 1d
+        shl si, 1          ; si = (cx - 1) * 2
         mov di, [bp + si] 
 
-        ; ; amendment for sp reg case
-        ; cmp cx, AMOUNT_REGS_DUMP
-        ; jne ??notSp 
-        ;     sub di, 6d  ; take into consid pushf, push cs, push ip
-        ; ??notSp:
+        ; amendment for sp reg case
+        cmp cx, AMOUNT_REGS_DUMP
+        jne ??notSp 
+            sub di, 6d  ; take into consid pushf, push cs, push ip
+        ??notSp:
 
         call nameReg
 
@@ -138,100 +135,20 @@ drawAllRegs ENDP
 ;        bx = current offset in mem for text
 ; Exit:  no
 ; Exp:   no
-; Destr: bx
+; Destr: bx, ax, ds, si
 ;-----------------------------------------------------------------------
 nameReg PROC
-    ; reverse names because little-endian
-    cmp cx, 1d
-    jne ??notAx
-        mov word ptr cs:[bx], 'XA' 
-        
-        jmp ??endNameReg
-    ??notAx:
+	mov ax, cs
+	mov ds, ax
 
-    cmp cx, 2d
-    jne ??notBx
-        mov word ptr cs:[bx], 'XB' 
-        
-        jmp ??endNameReg
-    ??notBx:
+	mov si, cx
+	sub si, 1d
+	shl si, 1d
+	add si, offset REGS_NAMES
 
-    cmp cx, 3d
-    jne ??notCx
-        mov word ptr cs:[bx], 'XC' 
-        
-        jmp ??endNameReg
-    ??notCx:
+	lodsw
 
-    cmp cx, 4d
-    jne ??notDx
-        mov word ptr cs:[bx], 'XD' 
-        
-        jmp ??endNameReg
-    ??notDx:
-
-    cmp cx, 5d
-    jne ??notSi
-        mov word ptr cs:[bx], 'IS' 
-        
-        jmp ??endNameReg
-    ??notSi:
-
-    cmp cx, 6d
-    jne ??notDi
-        mov word ptr cs:[bx], 'ID' 
-        
-        jmp ??endNameReg
-    ??notDi:
-
-    cmp cx, 7d
-    jne ??notDs
-        mov word ptr cs:[bx], 'SD' 
-        
-        jmp ??endNameReg
-    ??notDs:
-
-    cmp cx, 8d
-    jne ??notEs
-        mov word ptr cs:[bx], 'SE' 
-        
-        jmp ??endNameReg
-    ??notEs:
-
-    cmp cx, 9d
-    jne ??notSs
-        mov word ptr cs:[bx], 'SS' 
-        
-        jmp ??endNameReg
-    ??notSs:
-
-    cmp cx, 10d
-    jne ??notBp
-        mov word ptr cs:[bx], 'PB' 
-        
-        jmp ??endNameReg
-    ??notBp:
-
-    cmp cx, 11d
-    jne ??notSpReg
-        mov word ptr cs:[bx], 'PS' 
-        
-        jmp ??endNameReg
-    ??notSpReg:
-
-    cmp cx, 12d
-    jne ??notIp
-        mov word ptr cs:[bx], 'PI' 
-        
-        jmp ??endNameReg
-    ??notIp:
-
-    cmp cx, 13d
-    jne ??notCs
-        mov word ptr cs:[bx], 'SC' 
-        
-        jmp ??endNameReg
-    ??notCs:
+	mov word ptr cs:[bx], ax
 
     ??endNameReg:
     add bx, 2
@@ -241,6 +158,8 @@ nameReg PROC
 
     ret  
 nameReg ENDP 
+
+REGS_NAMES db 'AXBXCXDXSIDIDSESSSBPSPIPCS$'
 
 ; CDECL
 ;-----------------------------------------------------------------------
@@ -923,12 +842,13 @@ frameText       db 150 dup(0)
 ;-----------------------------------------------------------------
 
 nonResident:
+	cli
     call addOldIntHandlerJmp
 
     call replaceInt09Handler         
 
     call keepProgAsResident
-
+	sti
 addOldIntHandlerJmp PROC
     push 0d
     pop ds
@@ -945,12 +865,10 @@ replaceInt09Handler PROC
     push 0d
     pop es
     mov bx, 4d * _INTERRUPT_NUMBER
-    cli 
     mov word ptr es:[bx], offset keyboardInt
 
     mov ax, cs
     mov word ptr es:[bx + 2d], ax
-    sti
 
     ret
 replaceInt09Handler ENDP

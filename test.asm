@@ -4,11 +4,18 @@
 org 100h
 
 Start: 
-    
-    mov bx, 0d
-    mov cx, 3d
-    mov dx, 5d
+    mov ax, 300h
+    mov ds, ax
+    mov es, ax
+    mov ss, ax 
 
+    mov ax, 1h
+    mov bx, 0d
+    mov cx, 2h
+    mov dx, 3h
+    mov si, 4h
+    mov di, 5h
+    
     startCycle:
     cmp bx, 60000d
     je endCycle
