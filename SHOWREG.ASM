@@ -17,7 +17,7 @@ DIFFERENCE_NUM_ASCII_G9   equ 55d
 AMOUNT_NIBBLES_REGISTER   equ 4d
 AMOUNT_REGS_DUMP          equ 13d
 
-DELAY_AMOUNT_ITER_CYCLE   equ 65000d
+DELAY_ANIM_ITER_CYCLE     equ 1d
 
 _FRAME_SYMBOLS_START_ADDR equ offset frameSymbolsStr
 _FRAME_TEXT_ADDR          equ offset frameText
@@ -40,12 +40,21 @@ IS_KEY_PRESSED_FLAGS db 0d, 0d, '$'
 ; --------------------------------------------------------------------------
 
 timerInt PROC
-	push ss es ds di si dx cx bx ax
+	push sp bp ss es ds di si dx cx bx ax
+	
+	mov bp, sp 
+
+	call drawAllRegs
+	call frameDrawingPart
+
+	; send EOI to interrupt controller
+    mov al, EOI
+    out 20h, al
+
+	pop ax bx cx dx si di ds es ss bp sp
 
 	db 0eah
 	OLD_INT08_HANDLER: dd 0
-
-	pop ax bx cx dx si di ds es ss bp sp 
 timerInt ENDP
 
 
@@ -102,6 +111,12 @@ handleScanCode PROC
 
     ret
 handleScanCode ENDP
+
+
+
+; --------------------------------------------------------------------------
+; draw regs part
+; --------------------------------------------------------------------------
 
 drawAllRegs PROC
     mov bx, _FRAME_TEXT_ADDR 
@@ -382,7 +397,7 @@ animationDrawFrame PROC
 	call animationDrawFrameLines
 
 	push cx
-	mov cx, DELAY_AMOUNT_ITER_CYCLE
+	mov cx, DELAY_ANIM_ITER_CYCLE
 	call delayForAnimation
 	pop cx
 
@@ -864,13 +879,23 @@ frameText       db 150 dup(0)
 nonResident:
 	cli
 
+	;new int 09h handler setup
 	mov di, offset OLD_INT09_HANDLER
 	mov ax, _KEYBOARD_INT_NUMBER
     call addOldIntHandlerJmp
 
 	mov di, offset keyboardInt
 	mov ax, _KEYBOARD_INT_NUMBER
-    call replaceInt09Handler         
+    call replaceIntHandler         
+
+	;new int 08h handler setup
+	mov di, offset OLD_INT08_HANDLER
+	mov ax, _TIMER_INT_NUMBER
+    call addOldIntHandlerJmp
+
+	mov di, offset timerInt
+	mov ax, _TIMER_INT_NUMBER
+    call replaceIntHandler 
 
     call keepProgAsResident
 
@@ -907,7 +932,7 @@ addOldIntHandlerJmp ENDP
 ; Destr: es, bx, ax
 ;-----------------------------------------------------------------------
 
-replaceInt09Handler PROC
+replaceIntHandler PROC
     push 0d
     pop es
     mov bx, ax
@@ -918,7 +943,7 @@ replaceInt09Handler PROC
     mov word ptr es:[bx + 2d], ax
 
     ret
-replaceInt09Handler ENDP
+replaceIntHandler ENDP
 
 keepProgAsResident PROC
     mov ax, 3100h
